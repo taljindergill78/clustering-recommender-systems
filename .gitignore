@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+venv/
+ENV/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - generated outputs
+*.npy
+task1_results.txt
+task2_results.txt
+
+# Homework-specific files (not part of portfolio project)
+report.md
+report.html
+Report.pdf
+hw3.pdf
+implementation_plan.md
+task.md
+md_to_html.py
+
+# Task folder if it contains homework materials
+Task 1/
+
+# Large dataset files in archive folder
+archive/credits.csv
+archive/keywords.csv
+archive/links.csv
+archive/links_small.csv
+archive/movies_metadata.csv
+archive/ratings.csv
+# Keep ratings_small.csv - it's needed and should be smaller
+
