@@ -16,7 +16,7 @@
 
 **Which method is better?**
 
-**Answer: Cosine-K-Means is the better method** for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.
+**Answer: Cosine-K-Means is the better method** for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 1.54s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.
 
 ### Q2: Compare Accuracies (Purity)
 | Metric | Purity |
@@ -33,17 +33,17 @@
 Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iterations):
 | Metric | Iterations | Time (s) |
 | :--- | :--- | :--- |
-| **Euclidean** | 33 | 4.28s |
-| **Cosine** | **28** | **0.61s** |
-| **Jaccard** | 34 | 5.84s |
+| **Euclidean** | 33 | 13.56s |
+| **Cosine** | **28** | **1.54s** |
+| **Jaccard** | 34 | 16.29s |
 
 **Which method requires more iterations and times to converge?**
 
-**Answer: Jaccard requires the most iterations (34) and time (5.84s) to converge.** Euclidean also requires significant iterations (33) and time (4.28s), while Cosine converges the fastest with only 28 iterations and 0.61s.
+**Answer: Jaccard requires the most iterations (34) and time (16.29s) to converge.** Euclidean also requires significant iterations (33) and time (13.56s), while Cosine converges the fastest with only 28 iterations and 1.54s.
 
-**Analysis**: Cosine-K-Means converges the fastest (28 iterations, 0.61s), requiring 15% fewer iterations than Euclidean and completing 7x faster. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.
+**Analysis**: Cosine-K-Means converges the fastest (28 iterations, 1.54s), requiring 15% fewer iterations than Euclidean and completing 8.8x faster than Jaccard. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.
 
-**Conclusion**: Jaccard is the slowest computationally (5.84s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.
+**Conclusion**: Jaccard is the slowest computationally (16.29s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (13.56s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.
 
 ### Q4: SSE with respect to Terminating Conditions
 Comparing SSEs when using specific single terminating conditions (with a high max_iter limit for the first two):
@@ -57,8 +57,8 @@ Comparing SSEs when using specific single terminating conditions (with a high ma
 **Observation**: The results are very similar across conditions, indicating the algorithm converges well before the max iteration limit (100) and the "SSE Increase" condition (which might catch oscillations) yields slightly lower (better) SSEs in some cases (Cosine/Jaccard).
 
 ### Q5: Summary Observations
-1.  **Optimal Metric for High-Dimensional Data**: Cosine similarity is the optimal measure for this high-dimensional, sparse image dataset, outperforming both Euclidean and Jaccard in terms of accuracy (62.64% purity vs 58.51% and 60.12%), SSE minimization (686.29), and computational efficiency (0.61s). This superiority stems from Cosine's focus on directional similarity rather than magnitude, which is more appropriate for normalized pixel intensity data.
-2.  **Convergence Behavior and Computational Efficiency**: All metrics converge reasonably fast (<40 iterations), indicating the dataset's well-defined cluster structure. However, computational costs vary significantly: Cosine's simple dot product operations enable 7x faster execution than Jaccard's element-wise comparisons, demonstrating that algorithmic complexity matters as much as iteration count.
+1.  **Optimal Metric for High-Dimensional Data**: Cosine similarity is the optimal measure for this high-dimensional, sparse image dataset, outperforming both Euclidean and Jaccard in terms of accuracy (62.64% purity vs 58.51% and 60.12%), SSE minimization (686.29), and computational efficiency (1.54s). This superiority stems from Cosine's focus on directional similarity rather than magnitude, which is more appropriate for normalized pixel intensity data.
+2.  **Convergence Behavior and Computational Efficiency**: All metrics converge reasonably fast (<40 iterations), indicating the dataset's well-defined cluster structure. However, computational costs vary significantly: Cosine's simple dot product operations enable 10.6x faster execution than Jaccard's element-wise comparisons (1.54s vs 16.29s), demonstrating that algorithmic complexity matters as much as iteration count.
 3.  **Robustness to Stopping Criteria**: The choice of stopping criteria (centroid no change, SSE increase, or max iterations) has minimal impact on final SSE values for this well-behaved dataset, with differences <0.2% across conditions. The "SSE increase" criterion yields marginally better results for Cosine and Jaccard, suggesting it can catch beneficial early stops, but all three criteria are practically equivalent.
 4.  **Feature Scale Sensitivity**: Cosine similarity's robustness to feature scale makes it particularly suitable for variable-range data like images, while Euclidean and Jaccard show greater sensitivity to magnitude differences. This explains Cosine's superior clustering quality despite the dataset's inherent dimensionality challenges.
 

@@ -27,7 +27,7 @@
 </table>
 <p><b>Observation</b>: The SSE values are on different scales due to the nature of the metrics. Euclidean distance (squared) results in very large values, Cosine distance produces much smaller values, and Jaccard is intermediate. Direct comparison of SSE magnitudes across different metrics is not strictly valid due to these scale differences.</p>
 <p><b>Which method is better?</b></p>
-<p><b>Answer: Cosine-K-Means is the better method</b> for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.</p>
+<p><b>Answer: Cosine-K-Means is the better method</b> for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 1.54s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.</p>
 <h3>Q2: Compare Accuracies (Purity)</h3>
 <table>
 <tr><td>Metric</td><td>Purity</td></tr>
@@ -41,14 +41,14 @@
 <p>Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iterations):</p>
 <table>
 <tr><td>Metric</td><td>Iterations</td><td>Time (s)</td></tr>
-<tr><td><b>Euclidean</b></td><td>33</td><td>4.28s</td></tr>
-<tr><td><b>Cosine</b></td><td><b>28</b></td><td><b>0.61s</b></td></tr>
-<tr><td><b>Jaccard</b></td><td>34</td><td>5.84s</td></tr>
+<tr><td><b>Euclidean</b></td><td>33</td><td>13.56s</td></tr>
+<tr><td><b>Cosine</b></td><td><b>28</b></td><td><b>1.54s</b></td></tr>
+<tr><td><b>Jaccard</b></td><td>34</td><td>16.29s</td></tr>
 </table>
 <p><b>Which method requires more iterations and times to converge?</b></p>
-<p><b>Answer: Jaccard requires the most iterations (34) and time (5.84s) to converge.</b> Euclidean also requires significant iterations (33) and time (4.28s), while Cosine converges the fastest with only 28 iterations and 0.61s.</p>
-<p><b>Analysis</b>: Cosine-K-Means converges the fastest (28 iterations, 0.61s), requiring 15% fewer iterations than Euclidean and completing 7x faster. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.</p>
-<p><b>Conclusion</b>: Jaccard is the slowest computationally (5.84s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.</p>
+<p><b>Answer: Jaccard requires the most iterations (34) and time (16.29s) to converge.</b> Euclidean also requires significant iterations (33) and time (13.56s), while Cosine converges the fastest with only 28 iterations and 1.54s.</p>
+<p><b>Analysis</b>: Cosine-K-Means converges the fastest (28 iterations, 1.54s), requiring 15% fewer iterations than Euclidean and completing 8.8x faster than Jaccard. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.</p>
+<p><b>Conclusion</b>: Jaccard is the slowest computationally (16.29s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (13.56s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.</p>
 <h3>Q4: SSE with respect to Terminating Conditions</h3>
 <p>Comparing SSEs when using specific single terminating conditions (with a high max_iter limit for the first two):</p>
 <table>
@@ -59,8 +59,8 @@
 </table>
 <p><b>Observation</b>: The results are very similar across conditions, indicating the algorithm converges well before the max iteration limit (100) and the "SSE Increase" condition (which might catch oscillations) yields slightly lower (better) SSEs in some cases (Cosine/Jaccard).</p>
 <h3>Q5: Summary Observations</h3>
-<p>1.  <b>Optimal Metric for High-Dimensional Data</b>: Cosine similarity is the optimal measure for this high-dimensional, sparse image dataset, outperforming both Euclidean and Jaccard in terms of accuracy (62.64% purity vs 58.51% and 60.12%), SSE minimization (686.29), and computational efficiency (0.61s). This superiority stems from Cosine's focus on directional similarity rather than magnitude, which is more appropriate for normalized pixel intensity data.</p>
-<p>2.  <b>Convergence Behavior and Computational Efficiency</b>: All metrics converge reasonably fast (<40 iterations), indicating the dataset's well-defined cluster structure. However, computational costs vary significantly: Cosine's simple dot product operations enable 7x faster execution than Jaccard's element-wise comparisons, demonstrating that algorithmic complexity matters as much as iteration count.</p>
+<p>1.  <b>Optimal Metric for High-Dimensional Data</b>: Cosine similarity is the optimal measure for this high-dimensional, sparse image dataset, outperforming both Euclidean and Jaccard in terms of accuracy (62.64% purity vs 58.51% and 60.12%), SSE minimization (686.29), and computational efficiency (1.54s). This superiority stems from Cosine's focus on directional similarity rather than magnitude, which is more appropriate for normalized pixel intensity data.</p>
+<p>2.  <b>Convergence Behavior and Computational Efficiency</b>: All metrics converge reasonably fast (<40 iterations), indicating the dataset's well-defined cluster structure. However, computational costs vary significantly: Cosine's simple dot product operations enable 10.6x faster execution than Jaccard's element-wise comparisons (1.54s vs 16.29s), demonstrating that algorithmic complexity matters as much as iteration count.</p>
 <p>3.  <b>Robustness to Stopping Criteria</b>: The choice of stopping criteria (centroid no change, SSE increase, or max iterations) has minimal impact on final SSE values for this well-behaved dataset, with differences <0.2% across conditions. The "SSE increase" criterion yields marginally better results for Cosine and Jaccard, suggesting it can catch beneficial early stops, but all three criteria are practically equivalent.</p>
 <p>4.  <b>Feature Scale Sensitivity</b>: Cosine similarity's robustness to feature scale makes it particularly suitable for variable-range data like images, while Euclidean and Jaccard show greater sensitivity to magnitude differences. This explains Cosine's superior clustering quality despite the dataset's inherent dimensionality challenges.</p>
 <p>---</p>
