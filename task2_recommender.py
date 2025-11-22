@@ -226,6 +226,7 @@ def cross_validate(model_class, data, k_folds=5, **model_kwargs):
     
     maes = []
     rmses = []
+    fold_details = []  # NEW: Store individual fold results
     
     for k in range(k_folds):
         start = k * fold_size
@@ -233,9 +234,12 @@ def cross_validate(model_class, data, k_folds=5, **model_kwargs):
         test_fold = data[start:end]
         train_fold = data[:start] + data[end:]
         
+        fit_start = time.time()  # NEW: Track fit time
         model = model_class(**model_kwargs)
         model.fit(train_fold)
+        fit_time = time.time() - fit_start  # NEW
         
+        test_start = time.time()  # NEW: Track test time
         mae_sum = 0
         rmse_sum = 0
         n = 0
@@ -249,11 +253,20 @@ def cross_validate(model_class, data, k_folds=5, **model_kwargs):
             
         mae = mae_sum / n
         rmse = math.sqrt(rmse_sum / n)
+        test_time = time.time() - test_start  # NEW
+        
         maes.append(mae)
         rmses.append(rmse)
+        fold_details.append({  # NEW: Store fold details
+            'fold': k+1,
+            'mae': mae,
+            'rmse': rmse,
+            'fit_time': fit_time,
+            'test_time': test_time
+        })
         print(f"Fold {k+1}: MAE={mae:.4f}, RMSE={rmse:.4f}")
         
-    return np.mean(maes), np.mean(rmses)
+    return np.mean(maes), np.mean(rmses), fold_details  # NEW: Return fold details
 
 def main():
     ratings, _, _ = load_ratings('archive/ratings_small.csv')
@@ -261,18 +274,21 @@ def main():
     # Let's use full dataset.
     
     results = {}
+    fold_results = {}  # NEW: Store individual fold results
     
     # Q(c): Average MAE/RMSE for PMF, User-CF, Item-CF
     print("\n--- Q(c): 5-Fold CV ---")
     
     print("Running PMF...")
-    pmf_mae, pmf_rmse = cross_validate(PMF, ratings, n_factors=20, n_epochs=10)
+    pmf_mae, pmf_rmse, pmf_folds = cross_validate(PMF, ratings, n_factors=20, n_epochs=10)
     results['PMF'] = (pmf_mae, pmf_rmse)
+    fold_results['PMF'] = pmf_folds  # NEW
     print(f"PMF Average: MAE={pmf_mae:.4f}, RMSE={pmf_rmse:.4f}")
     
     print("Running User-Based CF (Cosine)...")
-    ub_mae, ub_rmse = cross_validate(CollaborativeFiltering, ratings, mode='user', metric='cosine')
+    ub_mae, ub_rmse, ub_folds = cross_validate(CollaborativeFiltering, ratings, mode='user', metric='cosine')
     results['UserCF'] = (ub_mae, ub_rmse)
+    fold_results['UserCF'] = ub_folds  # NEW
     print(f"UserCF Average: MAE={ub_mae:.4f}, RMSE={ub_rmse:.4f}")
     
     print("Running Item-Based CF (Cosine)...")
@@ -280,56 +296,40 @@ def main():
     # The requirement is 5-fold. I'll try to optimize or just wait.
     # To speed up, I'll reduce K or something? No, K is for prediction.
     # I'll just run it.
-    ib_mae, ib_rmse = cross_validate(CollaborativeFiltering, ratings, mode='item', metric='cosine')
+    ib_mae, ib_rmse, ib_folds = cross_validate(CollaborativeFiltering, ratings, mode='item', metric='cosine')
     results['ItemCF'] = (ib_mae, ib_rmse)
+    fold_results['ItemCF'] = ib_folds  # NEW
     print(f"ItemCF Average: MAE={ib_mae:.4f}, RMSE={ib_rmse:.4f}")
     
     # Q(e): Impact of Similarity Metrics
     print("\n--- Q(e): Impact of Similarity Metrics ---")
     metrics = ['cosine', 'msd', 'pearson']
     sim_results = {'user': {}, 'item': {}}
+    sim_fold_results = {'user': {}, 'item': {}}  # NEW: Store fold details
     
-    # We need to plot this. So we need values.
-    # Running 5-fold for ALL of these might take hours.
-    # Can we do a single train/test split for these experiments?
-    # The question implies "impact", usually requiring a plot.
-    # I will use a single 80/20 split for these experiments to save time.
-    
-    train_size = int(0.8 * len(ratings))
-    train_data = ratings[:train_size]
-    test_data = ratings[train_size:]
-    
+    # Run 5-fold CV for each metric to match friend's detail level
     for m in metrics:
-        print(f"Testing User-CF with {m}...")
-        model = CollaborativeFiltering(mode='user', metric=m)
-        model.fit(train_data)
-        # Evaluate
-        mae_sum, rmse_sum, n = 0, 0, 0
-        for u, i, r in test_data:
-            pred = model.predict(u, i)
-            err = r - pred
-            mae_sum += abs(err)
-            rmse_sum += err**2
-            n += 1
-        sim_results['user'][m] = (mae_sum/n, math.sqrt(rmse_sum/n))
+        print(f"\nTesting User-CF with {m} (5-fold CV)...")
+        user_mae, user_rmse, user_folds = cross_validate(CollaborativeFiltering, ratings, mode='user', metric=m)
+        sim_results['user'][m] = (user_mae, user_rmse)
+        sim_fold_results['user'][m] = user_folds  # NEW
+        print(f"User-CF {m}: MAE={user_mae:.4f}, RMSE={user_rmse:.4f}")
         
-        print(f"Testing Item-CF with {m}...")
-        model = CollaborativeFiltering(mode='item', metric=m)
-        model.fit(train_data)
-        # Evaluate
-        mae_sum, rmse_sum, n = 0, 0, 0
-        for u, i, r in test_data:
-            pred = model.predict(u, i)
-            err = r - pred
-            mae_sum += abs(err)
-            rmse_sum += err**2
-            n += 1
-        sim_results['item'][m] = (mae_sum/n, math.sqrt(rmse_sum/n))
+        print(f"Testing Item-CF with {m} (5-fold CV)...")
+        item_mae, item_rmse, item_folds = cross_validate(CollaborativeFiltering, ratings, mode='item', metric=m)
+        sim_results['item'][m] = (item_mae, item_rmse)
+        sim_fold_results['item'][m] = item_folds  # NEW
+        print(f"Item-CF {m}: MAE={item_mae:.4f}, RMSE={item_rmse:.4f}")
 
     # Q(f): Impact of Neighbors (K)
     print("\n--- Q(f): Impact of Neighbors (K) ---")
-    k_values = [5, 10, 20, 40, 60]
+    k_values = list(range(5, 65, 5))  # [5,10,15,20,25,30,35,40,45,50,55,60] - More granular
     k_results = {'user': [], 'item': []}
+    
+    # Use 80/20 split for K testing (faster than 5-fold)
+    train_size = int(0.8 * len(ratings))
+    train_data = ratings[:train_size]
+    test_data = ratings[train_size:]
     
     for k in k_values:
         print(f"Testing K={k}...")
@@ -355,8 +355,17 @@ def main():
 
     # Save results
     with open('task2_results.txt', 'w') as f:
-        f.write(str(results) + "\n")
-        f.write(str(sim_results) + "\n")
+        f.write("=== MAIN RESULTS ===\n")
+        f.write(str(results) + "\n\n")
+        f.write("=== FOLD DETAILS (c) ===\n")
+        f.write(str(fold_results) + "\n\n")
+        f.write("=== SIMILARITY RESULTS ===\n")
+        f.write(str(sim_results) + "\n\n")
+        f.write("=== SIMILARITY FOLD DETAILS (e) ===\n")
+        f.write(str(sim_fold_results) + "\n\n")
+        f.write("=== K VALUES ===\n")
+        f.write(str(k_values) + "\n\n")
+        f.write("=== K RESULTS ===\n")
         f.write(str(k_results) + "\n")
         
     # Plotting

@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1, h2, h3 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    img { max-width: 100%; height: auto; display: block; margin: 20px auto; }
+    code { background-color: #f4f4f4; padding: 2px 5px; border-radius: 3px; }
+    pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>HW3 Data Mining Report</h1>
+<h2>Task 1: Algorithmic Analysis K-Means Clustering</h2>
+<p><b>Dataset</b>: `kmeans_data` (10,000 samples, 784 features, 10 classes)</p>
+<p><b>Algorithm</b>: K-Means implemented from scratch.</p>
+<h3>Q1: Compare SSEs of Euclidean, Cosine, and Jaccard</h3>
+<table>
+<tr><td>Metric</td><td>SSE</td></tr>
+<tr><td><b>Euclidean</b></td><td>25,414,767,689.96</td></tr>
+<tr><td><b>Cosine</b></td><td>686.29</td></tr>
+<tr><td><b>Jaccard</b></td><td>3,659.85</td></tr>
+</table>
+<p><b>Observation</b>: The SSE values are on different scales due to the nature of the metrics. Euclidean distance (squared) results in very large values, Cosine distance produces much smaller values, and Jaccard is intermediate. Direct comparison of SSE magnitudes across different metrics is not strictly valid due to these scale differences.</p>
+<p><b>Conclusion</b>: <b>Cosine similarity is the better metric</b> for this dataset. While SSE values cannot be directly compared across metrics, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.</p>
+<h3>Q2: Compare Accuracies (Purity)</h3>
+<table>
+<tr><td>Metric</td><td>Purity</td></tr>
+<tr><td><b>Euclidean</b></td><td>0.5851</td></tr>
+<tr><td><b>Cosine</b></td><td><b>0.6264</b></td></tr>
+<tr><td><b>Jaccard</b></td><td>0.6012</td></tr>
+</table>
+<p><b>Conclusion</b>: <b>Cosine-K-Means</b> achieves the highest purity (accuracy), followed by Jaccard and then Euclidean. This suggests that for this high-dimensional dataset (likely image data), the angle (direction) is more informative than the magnitude.</p>
+<h3>Q3: Convergence Analysis (Iterations & Time)</h3>
+<p>Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iterations):</p>
+<table>
+<tr><td>Metric</td><td>Iterations</td><td>Time (s)</td></tr>
+<tr><td><b>Euclidean</b></td><td>33</td><td>4.28s</td></tr>
+<tr><td><b>Cosine</b></td><td><b>28</b></td><td><b>0.61s</b></td></tr>
+<tr><td><b>Jaccard</b></td><td>34</td><td>5.84s</td></tr>
+</table>
+<p><b>Analysis</b>: Cosine-K-Means converges the fastest (28 iterations, 0.61s), requiring 15% fewer iterations than Euclidean and completing 7x faster. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.</p>
+<p><b>Conclusion</b>: <b>Cosine-K-Means</b> converges the fastest in both iterations and time. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Jaccard is the slowest computationally (5.84s) despite similar iteration count, due to complex element-wise comparisons.</p>
+<h3>Q4: SSE with respect to Terminating Conditions</h3>
+<p>Comparing SSEs when using specific single terminating conditions (with a high max_iter limit for the first two):</p>
+<table>
+<tr><td>Metric</td><td>Centroid No Change</td><td>SSE Increase</td><td>Max Iterations (100)</td></tr>
+<tr><td><b>Euclidean</b></td><td>2.54e10</td><td>2.54e10</td><td>2.54e10</td></tr>
+<tr><td><b>Cosine</b></td><td>686.44</td><td>686.29</td><td>686.44</td></tr>
+<tr><td><b>Jaccard</b></td><td>3660.39</td><td>3659.85</td><td>3660.39</td></tr>
+</table>
+<p><b>Observation</b>: The results are very similar across conditions, indicating the algorithm converges well before the max iteration limit (100) and the "SSE Increase" condition (which might catch oscillations) yields slightly lower (better) SSEs in some cases (Cosine/Jaccard).</p>
+<h3>Q5: Summary Observations</h3>
+<p>1.  <b>Optimal Metric for High-Dimensional Data</b>: Cosine similarity is the optimal measure for this high-dimensional, sparse image dataset, outperforming both Euclidean and Jaccard in terms of accuracy (62.64% purity vs 58.51% and 60.12%), SSE minimization (686.29), and computational efficiency (0.61s). This superiority stems from Cosine's focus on directional similarity rather than magnitude, which is more appropriate for normalized pixel intensity data.</p>
+<p>2.  <b>Convergence Behavior and Computational Efficiency</b>: All metrics converge reasonably fast (<40 iterations), indicating the dataset's well-defined cluster structure. However, computational costs vary significantly: Cosine's simple dot product operations enable 7x faster execution than Jaccard's element-wise comparisons, demonstrating that algorithmic complexity matters as much as iteration count.</p>
+<p>3.  <b>Robustness to Stopping Criteria</b>: The choice of stopping criteria (centroid no change, SSE increase, or max iterations) has minimal impact on final SSE values for this well-behaved dataset, with differences <0.2% across conditions. The "SSE increase" criterion yields marginally better results for Cosine and Jaccard, suggesting it can catch beneficial early stops, but all three criteria are practically equivalent.</p>
+<p>4.  <b>Feature Scale Sensitivity</b>: Cosine similarity's robustness to feature scale makes it particularly suitable for variable-range data like images, while Euclidean and Jaccard show greater sensitivity to magnitude differences. This explains Cosine's superior clustering quality despite the dataset's inherent dimensionality challenges.</p>
+<p>---</p>
+<h2>Task 2: Recommender Systems</h2>
+<p><b>Dataset</b>: MovieLens Small (`ratings_small.csv`)</p>
+<p><b>Evaluation</b>: 5-Fold Cross-Validation</p>
+<h3>(c) Average MAE and RMSE (5-Fold CV)</h3>
+<p>All three models were evaluated using rigorous 5-fold cross-validation on the MovieLens Small dataset (100,000+ ratings from 600+ users and 9,000+ movies). The table below presents the average performance across all folds, with lower values indicating better predictive accuracy.</p>
+<table>
+<tr><td>Algorithm</td><td>MAE (Mean)</td><td>RMSE (Mean)</td></tr>
+<tr><td><b>PMF</b></td><td>0.8370</td><td>1.1049</td></tr>
+<tr><td><b>User-Based CF</b></td><td><b>0.7620</b></td><td><b>0.9888</b></td></tr>
+<tr><td><b>Item-Based CF</b></td><td>0.7924</td><td>1.0137</td></tr>
+</table>
+<p><b>Detailed Fold Results - PMF:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.8311</td><td>1.1007</td></tr>
+<tr><td>2</td><td>0.8429</td><td>1.1133</td></tr>
+<tr><td>3</td><td>0.8472</td><td>1.1155</td></tr>
+<tr><td>4</td><td>0.8341</td><td>1.1040</td></tr>
+<tr><td>5</td><td>0.8295</td><td>1.0912</td></tr>
+</table>
+<p><b>Detailed Fold Results - User-Based CF (Cosine):</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7660</td><td>0.9909</td></tr>
+<tr><td>2</td><td>0.7604</td><td>0.9876</td></tr>
+<tr><td>3</td><td>0.7641</td><td>0.9947</td></tr>
+<tr><td>4</td><td>0.7603</td><td>0.9862</td></tr>
+<tr><td>5</td><td>0.7591</td><td>0.9848</td></tr>
+</table>
+<p><b>Detailed Fold Results - Item-Based CF (Cosine):</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7808</td><td>0.9965</td></tr>
+<tr><td>2</td><td>0.7971</td><td>1.0224</td></tr>
+<tr><td>3</td><td>0.7883</td><td>1.0094</td></tr>
+<tr><td>4</td><td>0.7964</td><td>1.0196</td></tr>
+<tr><td>5</td><td>0.7993</td><td>1.0207</td></tr>
+</table>
+<p><b>Performance Consistency</b>: User-Based CF demonstrates both the best performance and excellent consistency across folds (MAE std dev ±0.003, RMSE std dev ±0.004), indicating robust generalization. Item-Based CF shows slightly higher variance (MAE std dev ±0.007), while PMF exhibits the most variance (MAE std dev ±0.007, RMSE std dev ±0.010).</p>
+<h3>(d) Performance Comparison</h3>
+<p><b>Best Model - User-Based Collaborative Filtering</b>: User-Based CF achieves the best overall performance with MAE=0.7620 and RMSE=0.9888, outperforming Item-Based CF by 3.8% in MAE and 2.5% in RMSE. This superiority can be attributed to the dataset's user-centric rating patterns, where users with similar tastes provide more reliable prediction signals than item similarity.</p>
+<p><b>PMF Limitations</b>: PMF performs the worst (MAE=0.8370, RMSE=1.1049), with 9.8% higher MAE than User-CF. This is primarily due to the basic SGD implementation without advanced techniques like bias terms, regularization tuning, or adaptive learning rates. The matrix factorization approach also struggles with the dataset's sparsity (~98.3% sparse).</p>
+<p><b>Item-Based CF Middle Ground</b>: Item-Based CF achieves intermediate performance (MAE=0.7924, RMSE=1.0137), performing 4.0% worse than User-CF. The item-item similarity matrix benefits from more stable patterns (items don't change taste), but the computational overhead and sparsity in item comparisons limit its effectiveness compared to user-based approaches on this dataset.</p>
+<h3>(e) Impact of Similarity Metrics</h3>
+<p>We evaluated all three similarity metrics (Cosine, MSD, Pearson) using 5-fold cross-validation for both User-based and Item-based CF. This comprehensive evaluation isolates the effect of similarity metrics and provides robust performance estimates.</p>
+<table>
+<tr><td>Metric</td><td>User-CF RMSE</td><td>Item-CF RMSE</td></tr>
+<tr><td><b>Cosine</b></td><td>0.9897</td><td>1.0161</td></tr>
+<tr><td><b>MSD</b></td><td><b>0.9529</b></td><td><b>0.9467</b></td></tr>
+<tr><td><b>Pearson</b></td><td>0.9926</td><td>1.0132</td></tr>
+</table>
+<p><b>Detailed Fold Results - User-CF with Cosine:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7601</td><td>0.9844</td></tr>
+<tr><td>2</td><td>0.7595</td><td>0.9857</td></tr>
+<tr><td>3</td><td>0.7640</td><td>0.9917</td></tr>
+<tr><td>4</td><td>0.7651</td><td>0.9931</td></tr>
+<tr><td>5</td><td>0.7644</td><td>0.9939</td></tr>
+</table>
+<p><b>Detailed Fold Results - Item-CF with Cosine:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7994</td><td>1.0217</td></tr>
+<tr><td>2</td><td>0.7955</td><td>1.0195</td></tr>
+<tr><td>3</td><td>0.7892</td><td>1.0091</td></tr>
+<tr><td>4</td><td>0.7966</td><td>1.0178</td></tr>
+<tr><td>5</td><td>0.7939</td><td>1.0127</td></tr>
+</table>
+<p><b>Detailed Fold Results - User-CF with MSD:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7323</td><td>0.9567</td></tr>
+<tr><td>2</td><td>0.7277</td><td>0.9451</td></tr>
+<tr><td>3</td><td>0.7267</td><td>0.9529</td></tr>
+<tr><td>4</td><td>0.7369</td><td>0.9593</td></tr>
+<tr><td>5</td><td>0.7312</td><td>0.9508</td></tr>
+</table>
+<p><b>Detailed Fold Results - Item-CF with MSD:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7297</td><td>0.9408</td></tr>
+<tr><td>2</td><td>0.7317</td><td>0.9446</td></tr>
+<tr><td>3</td><td>0.7340</td><td>0.9513</td></tr>
+<tr><td>4</td><td>0.7291</td><td>0.9450</td></tr>
+<tr><td>5</td><td>0.7370</td><td>0.9515</td></tr>
+</table>
+<p><b>Detailed Fold Results - User-CF with Pearson:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7601</td><td>0.9849</td></tr>
+<tr><td>2</td><td>0.7684</td><td>0.9941</td></tr>
+<tr><td>3</td><td>0.7670</td><td>0.9891</td></tr>
+<tr><td>4</td><td>0.7693</td><td>0.9950</td></tr>
+<tr><td>5</td><td>0.7738</td><td>1.0002</td></tr>
+</table>
+<p><b>Detailed Fold Results - Item-CF with Pearson:</b></p>
+<table>
+<tr><td>Fold</td><td>MAE</td><td>RMSE</td></tr>
+<tr><td>1</td><td>0.7905</td><td>1.0161</td></tr>
+<tr><td>2</td><td>0.7892</td><td>1.0168</td></tr>
+<tr><td>3</td><td>0.7894</td><td>1.0124</td></tr>
+<tr><td>4</td><td>0.7865</td><td>1.0131</td></tr>
+<tr><td>5</td><td>0.7823</td><td>1.0074</td></tr>
+</table>
+<p><b>Plot</b>:</p>
+<img src="similarity_impact.png" alt="Similarity Impact">
+<p><b>Observation</b>: <b>MSD</b> (Mean Squared Difference) similarity significantly outperforms Cosine and Pearson for both User and Item-based CF on this dataset.</p>
+<p><b>Answer to consistency question</b>: Yes, the impact of the three metrics on User-based CF is <b>highly consistent</b> with the impact on Item-based CF, demonstrating robust metric behavior:</p>
+<p><b>Ranking Consistency</b>: MSD consistently ranks first (lowest RMSE) for both User-CF (0.9529) and Item-CF (0.9467), achieving 3.7% and 6.8% improvements over Cosine respectively. Cosine and Pearson rank second and third in both cases, with minimal difference between them (<0.3% RMSE).</p>
+<p><b>Performance Gaps</b>: The relative performance gaps are similar across both methods - MSD's advantage over Cosine is 3.7% for User-CF and 6.8% for Item-CF, indicating that MSD's superior rating distance measurement translates consistently regardless of the collaborative filtering approach.</p>
+<p><b>Interpretation</b>: This consistency suggests that MSD (similarity = 1/(1+mean_squared_difference)) better captures the fundamental rating behavior patterns - penalizing large disagreements more heavily - regardless of whether we compare users or items. The squared difference term makes it more sensitive to rating discrepancies than Cosine's angular measure or Pearson's correlation.</p>
+<h3>(f) Impact of Number of Neighbors (K)</h3>
+<p>We performed granular testing of K values from 5 to 60 in steps of 5 to thoroughly understand the impact of neighborhood size on recommendation quality. RMSE values are shown below:</p>
+<table>
+<tr><td>K</td><td>User-CF RMSE</td><td>Item-CF RMSE</td></tr>
+<tr><td>5</td><td>1.0317</td><td>1.0906</td></tr>
+<tr><td>10</td><td>0.9956</td><td>1.0395</td></tr>
+<tr><td>15</td><td>0.9877</td><td>1.0191</td></tr>
+<tr><td>20</td><td>0.9847</td><td>1.0067</td></tr>
+<tr><td>25</td><td>0.9839</td><td>0.9993</td></tr>
+<tr><td>30</td><td>0.9834</td><td>0.9935</td></tr>
+<tr><td>35</td><td>0.9833</td><td>0.9900</td></tr>
+<tr><td>40</td><td>0.9831</td><td>0.9865</td></tr>
+<tr><td>45</td><td>0.9831</td><td>0.9838</td></tr>
+<tr><td>50</td><td>0.9832</td><td>0.9808</td></tr>
+<tr><td>55</td><td>0.9837</td><td>0.9788</td></tr>
+<tr><td>60</td><td>0.9839</td><td>0.9767</td></tr>
+</table>
+<p><b>Plot</b>:</p>
+<img src="k_impact.png" alt="K Impact">
+<p><b>Observation</b>: Performance improvement follows a logarithmic pattern with diminishing returns as K increases:</p>
+<p><b>User-CF Saturation</b>: User-CF shows rapid improvement from K=5 (RMSE=1.0317) to K=40 (RMSE=0.9831), achieving 4.7% error reduction. Beyond K=40, gains plateau and performance slightly degrades (K=60: RMSE=0.9839), indicating saturation around K=40 where the most similar users have been captured. The degradation beyond K=50 suggests noise from less-similar users dilutes prediction quality.</p>
+<p><b>Item-CF Continued Benefit</b>: Item-CF exhibits more gradual but sustained improvement throughout the K range, with 10.4% error reduction from K=5 (RMSE=1.0906) to K=60 (RMSE=0.9767). Unlike User-CF, Item-CF shows no saturation within the tested range, with consistent improvement even at K=60, suggesting sparser item-item relationships require more neighbors for reliable predictions.</p>
+<p><b>Underlying Cause</b>: The different saturation points reflect the dataset's structure - denser user-user correlations (671 users rating similar movies) versus sparser item-item patterns (9,000 movies with fewer overlapping raters). This explains why User-CF saturates earlier while Item-CF benefits from additional neighbors.</p>
+<h3>(g) Best Number of Neighbors (K)</h3>
+<ul><li>  <b>User-Based CF</b>: Best K is <b>40</b> (RMSE = 0.9831).</li><li>  <b>Item-Based CF</b>: Best K is <b>60</b> (RMSE = 0.9767) (within the tested range).</li></ul>
+<p><b>Conclusion</b>: The best K values differ significantly between the two approaches:</p>
+<p><b>User-Based CF</b>: Optimal K=40 (RMSE=0.9831), beyond which performance degrades (K=60: 0.9839) due to noise from less-similar users diluting prediction quality. The sharp initial improvement (K=5→10: 3.5% gain) followed by gradual refinement (K=10→40: 1.3% gain) suggests the top 40 most similar users capture the essential preference signals.</p>
+<p><b>Item-Based CF</b>: Optimal K=60 (RMSE=0.9767) within tested range, with continued improvement trend suggesting potential for even higher K values. The sustained improvement throughout (K=5→60: 10.4% gain with no plateau) indicates that item-item relationships are sparser and benefit from broader neighborhoods to overcome data sparsity.</p>
+<p><b>Practical Implication</b>: The distinct optimal K values (40 vs 60) demonstrate that hyperparameter tuning must be method-specific. User-CF can operate efficiently with fewer neighbors, offering computational advantages (40 similarity computations vs 60), while Item-CF requires larger neighborhoods to overcome sparsity, trading computation for accuracy. For production systems, User-CF's lower optimal K provides faster inference while maintaining competitive accuracy.</p>
+<h2>Code Access</h2>
+<p>The complete source code for this project is available on GitHub:</p>
+<ul>
+<li><b>Task 1 (K-Means Clustering)</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task1_kmeans.py">task1_kmeans.py</a></li>
+<li><b>Task 2 (Recommender Systems)</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task2_recommender.py">task2_recommender.py</a></li>
+<li><b>Full Repository</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems">https://github.com/taljindergill78/clustering-recommender-systems</a></li>
+</ul>
+
+</body>
+</html>

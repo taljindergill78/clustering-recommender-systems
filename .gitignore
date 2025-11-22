@@ -17,15 +17,10 @@ env/
 .DS_Store
 Thumbs.db
 
-# Project specific - generated outputs
+# Project specific - generated outputs (binary files that can be regenerated)
 *.npy
-task1_results.txt
-task2_results.txt
 
-# Homework-specific files (not part of portfolio project)
-report.md
-report.html
-Report.pdf
+# Assignment files (not our work)
 hw3.pdf
 implementation_plan.md
 task.md
