@@ -7,6 +7,10 @@ from collections import defaultdict
 
 # --- Data Loading ---
 def load_ratings(file_path):
+    """
+    Read data from "ratings small.csv" with line format: 'userID movieID rating timestamp'.
+    
+    """
     print(f"Loading ratings from {file_path}...")
     ratings = []
     users = set()
@@ -15,10 +19,11 @@ def load_ratings(file_path):
         reader = csv.reader(f)
         next(reader) # Skip header
         for row in reader:
-            u = int(row[0])
-            i = int(row[1])
-            r = float(row[2])
-            ratings.append((u, i, r))
+            u = int(row[0])       # userID
+            i = int(row[1])       # movieID
+            r = float(row[2])     # rating
+            t = int(row[3])       # timestamp
+            ratings.append((u, i, r))  # Store (userID, movieID, rating) for algorithms
             users.add(u)
             items.add(i)
     print(f"Loaded {len(ratings)} ratings. Users: {len(users)}, Items: {len(items)}")

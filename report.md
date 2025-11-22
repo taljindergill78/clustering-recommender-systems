@@ -14,7 +14,9 @@
 
 **Observation**: The SSE values are on different scales due to the nature of the metrics. Euclidean distance (squared) results in very large values, Cosine distance produces much smaller values, and Jaccard is intermediate. Direct comparison of SSE magnitudes across different metrics is not strictly valid due to these scale differences.
 
-**Conclusion**: **Cosine similarity is the better metric** for this dataset. While SSE values cannot be directly compared across metrics, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.
+**Which method is better?**
+
+**Answer: Cosine-K-Means is the better method** for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.
 
 ### Q2: Compare Accuracies (Purity)
 | Metric | Purity |
@@ -23,7 +25,9 @@
 | **Cosine** | **0.6264** |
 | **Jaccard** | 0.6012 |
 
-**Conclusion**: **Cosine-K-Means** achieves the highest purity (accuracy), followed by Jaccard and then Euclidean. This suggests that for this high-dimensional dataset (likely image data), the angle (direction) is more informative than the magnitude.
+**Which metric is better?**
+
+**Answer: Cosine is the better metric.** Cosine-K-Means achieves the highest purity (accuracy of 62.64%), followed by Jaccard (60.12%) and then Euclidean (58.51%). This suggests that for this high-dimensional dataset (likely image data), the angle (direction) is more informative than the magnitude.
 
 ### Q3: Convergence Analysis (Iterations & Time)
 Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iterations):
@@ -33,9 +37,13 @@ Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iter
 | **Cosine** | **28** | **0.61s** |
 | **Jaccard** | 34 | 5.84s |
 
+**Which method requires more iterations and times to converge?**
+
+**Answer: Jaccard requires the most iterations (34) and time (5.84s) to converge.** Euclidean also requires significant iterations (33) and time (4.28s), while Cosine converges the fastest with only 28 iterations and 0.61s.
+
 **Analysis**: Cosine-K-Means converges the fastest (28 iterations, 0.61s), requiring 15% fewer iterations than Euclidean and completing 7x faster. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.
 
-**Conclusion**: **Cosine-K-Means** converges the fastest in both iterations and time. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Jaccard is the slowest computationally (5.84s) despite similar iteration count, due to complex element-wise comparisons.
+**Conclusion**: Jaccard is the slowest computationally (5.84s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.
 
 ### Q4: SSE with respect to Terminating Conditions
 Comparing SSEs when using specific single terminating conditions (with a high max_iter limit for the first two):
@@ -101,6 +109,10 @@ All three models were evaluated using rigorous 5-fold cross-validation on the Mo
 **Performance Consistency**: User-Based CF demonstrates both the best performance and excellent consistency across folds (MAE std dev ±0.003, RMSE std dev ±0.004), indicating robust generalization. Item-Based CF shows slightly higher variance (MAE std dev ±0.007), while PMF exhibits the most variance (MAE std dev ±0.007, RMSE std dev ±0.010).
 
 ### (d) Performance Comparison
+
+**Which ML model is the best in the movie rating data?**
+
+**Answer: User-Based Collaborative Filtering** is the best model for this movie rating dataset.
 
 **Best Model - User-Based Collaborative Filtering**: User-Based CF achieves the best overall performance with MAE=0.7620 and RMSE=0.9888, outperforming Item-Based CF by 3.8% in MAE and 2.5% in RMSE. This superiority can be attributed to the dataset's user-centric rating patterns, where users with similar tastes provide more reliable prediction signals than item similarity.
 
@@ -177,7 +189,9 @@ We evaluated all three similarity metrics (Cosine, MSD, Pearson) using 5-fold cr
 
 **Observation**: **MSD** (Mean Squared Difference) similarity significantly outperforms Cosine and Pearson for both User and Item-based CF on this dataset.
 
-**Answer to consistency question**: Yes, the impact of the three metrics on User-based CF is **highly consistent** with the impact on Item-based CF, demonstrating robust metric behavior:
+**Is the impact of the three metrics on User based Collaborative Filtering consistent with the impact of the three metrics on Item based Collaborative Filtering?**
+
+**Answer: YES.** The impact of the three metrics on User-based CF is highly consistent with the impact on Item-based CF, demonstrating robust metric behavior:
 
 **Ranking Consistency**: MSD consistently ranks first (lowest RMSE) for both User-CF (0.9529) and Item-CF (0.9467), achieving 3.7% and 6.8% improvements over Cosine respectively. Cosine and Pearson rank second and third in both cases, with minimal difference between them (<0.3% RMSE).
 
@@ -219,6 +233,10 @@ We performed granular testing of K values from 5 to 60 in steps of 5 to thorough
 
 *   **User-Based CF**: Best K is **40** (RMSE = 0.9831).
 *   **Item-Based CF**: Best K is **60** (RMSE = 0.9767) (within the tested range).
+
+**Is the best K of User-based collaborative filtering the same with the best K of Item-based collaborative filtering?**
+
+**Answer: NO.** The best K values are different: K=40 for User-CF and K=60 for Item-CF.
 
 **Conclusion**: The best K values differ significantly between the two approaches:
 

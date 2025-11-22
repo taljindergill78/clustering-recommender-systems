@@ -26,7 +26,8 @@
 <tr><td><b>Jaccard</b></td><td>3,659.85</td></tr>
 </table>
 <p><b>Observation</b>: The SSE values are on different scales due to the nature of the metrics. Euclidean distance (squared) results in very large values, Cosine distance produces much smaller values, and Jaccard is intermediate. Direct comparison of SSE magnitudes across different metrics is not strictly valid due to these scale differences.</p>
-<p><b>Conclusion</b>: <b>Cosine similarity is the better metric</b> for this dataset. While SSE values cannot be directly compared across metrics, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.</p>
+<p><b>Which method is better?</b></p>
+<p><b>Answer: Cosine-K-Means is the better method</b> for this dataset. While SSE values cannot be directly compared across metrics due to scale differences, Cosine achieves the highest clustering purity (62.64% as shown in Q2) and fastest convergence (28 iterations, 0.61s as shown in Q3), making it the most effective metric for clustering this high-dimensional image data.</p>
 <h3>Q2: Compare Accuracies (Purity)</h3>
 <table>
 <tr><td>Metric</td><td>Purity</td></tr>
@@ -34,7 +35,8 @@
 <tr><td><b>Cosine</b></td><td><b>0.6264</b></td></tr>
 <tr><td><b>Jaccard</b></td><td>0.6012</td></tr>
 </table>
-<p><b>Conclusion</b>: <b>Cosine-K-Means</b> achieves the highest purity (accuracy), followed by Jaccard and then Euclidean. This suggests that for this high-dimensional dataset (likely image data), the angle (direction) is more informative than the magnitude.</p>
+<p><b>Which metric is better?</b></p>
+<p><b>Answer: Cosine is the better metric.</b> Cosine-K-Means achieves the highest purity (accuracy of 62.64%), followed by Jaccard (60.12%) and then Euclidean (58.51%). This suggests that for this high-dimensional dataset (likely image data), the angle (direction) is more informative than the magnitude.</p>
 <h3>Q3: Convergence Analysis (Iterations & Time)</h3>
 <p>Using the "OR" criteria (stop if centroid no change OR SSE increases OR max iterations):</p>
 <table>
@@ -43,8 +45,10 @@
 <tr><td><b>Cosine</b></td><td><b>28</b></td><td><b>0.61s</b></td></tr>
 <tr><td><b>Jaccard</b></td><td>34</td><td>5.84s</td></tr>
 </table>
+<p><b>Which method requires more iterations and times to converge?</b></p>
+<p><b>Answer: Jaccard requires the most iterations (34) and time (5.84s) to converge.</b> Euclidean also requires significant iterations (33) and time (4.28s), while Cosine converges the fastest with only 28 iterations and 0.61s.</p>
 <p><b>Analysis</b>: Cosine-K-Means converges the fastest (28 iterations, 0.61s), requiring 15% fewer iterations than Euclidean and completing 7x faster. This efficiency stems from Cosine's simpler computational structure using dot products and norms, compared to Jaccard's expensive element-wise min/max operations across all 784 dimensions.</p>
-<p><b>Conclusion</b>: <b>Cosine-K-Means</b> converges the fastest in both iterations and time. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Jaccard is the slowest computationally (5.84s) despite similar iteration count, due to complex element-wise comparisons.</p>
+<p><b>Conclusion</b>: Jaccard is the slowest computationally (5.84s) despite similar iteration count to Euclidean, due to complex element-wise comparisons. Euclidean requires more iterations (33) and time (4.28s) due to high dimensionality effects. Cosine-K-Means converges the fastest in both iterations and time.</p>
 <h3>Q4: SSE with respect to Terminating Conditions</h3>
 <p>Comparing SSEs when using specific single terminating conditions (with a high max_iter limit for the first two):</p>
 <table>
@@ -100,6 +104,8 @@
 </table>
 <p><b>Performance Consistency</b>: User-Based CF demonstrates both the best performance and excellent consistency across folds (MAE std dev ±0.003, RMSE std dev ±0.004), indicating robust generalization. Item-Based CF shows slightly higher variance (MAE std dev ±0.007), while PMF exhibits the most variance (MAE std dev ±0.007, RMSE std dev ±0.010).</p>
 <h3>(d) Performance Comparison</h3>
+<p><b>Which ML model is the best in the movie rating data?</b></p>
+<p><b>Answer: User-Based Collaborative Filtering</b> is the best model for this movie rating dataset.</p>
 <p><b>Best Model - User-Based Collaborative Filtering</b>: User-Based CF achieves the best overall performance with MAE=0.7620 and RMSE=0.9888, outperforming Item-Based CF by 3.8% in MAE and 2.5% in RMSE. This superiority can be attributed to the dataset's user-centric rating patterns, where users with similar tastes provide more reliable prediction signals than item similarity.</p>
 <p><b>PMF Limitations</b>: PMF performs the worst (MAE=0.8370, RMSE=1.1049), with 9.8% higher MAE than User-CF. This is primarily due to the basic SGD implementation without advanced techniques like bias terms, regularization tuning, or adaptive learning rates. The matrix factorization approach also struggles with the dataset's sparsity (~98.3% sparse).</p>
 <p><b>Item-Based CF Middle Ground</b>: Item-Based CF achieves intermediate performance (MAE=0.7924, RMSE=1.0137), performing 4.0% worse than User-CF. The item-item similarity matrix benefits from more stable patterns (items don't change taste), but the computational overhead and sparsity in item comparisons limit its effectiveness compared to user-based approaches on this dataset.</p>
@@ -168,7 +174,8 @@
 <p><b>Plot</b>:</p>
 <img src="similarity_impact.png" alt="Similarity Impact">
 <p><b>Observation</b>: <b>MSD</b> (Mean Squared Difference) similarity significantly outperforms Cosine and Pearson for both User and Item-based CF on this dataset.</p>
-<p><b>Answer to consistency question</b>: Yes, the impact of the three metrics on User-based CF is <b>highly consistent</b> with the impact on Item-based CF, demonstrating robust metric behavior:</p>
+<p><b>Is the impact of the three metrics on User based Collaborative Filtering consistent with the impact of the three metrics on Item based Collaborative Filtering?</b></p>
+<p><b>Answer: YES.</b> The impact of the three metrics on User-based CF is highly consistent with the impact on Item-based CF, demonstrating robust metric behavior:</p>
 <p><b>Ranking Consistency</b>: MSD consistently ranks first (lowest RMSE) for both User-CF (0.9529) and Item-CF (0.9467), achieving 3.7% and 6.8% improvements over Cosine respectively. Cosine and Pearson rank second and third in both cases, with minimal difference between them (<0.3% RMSE).</p>
 <p><b>Performance Gaps</b>: The relative performance gaps are similar across both methods - MSD's advantage over Cosine is 3.7% for User-CF and 6.8% for Item-CF, indicating that MSD's superior rating distance measurement translates consistently regardless of the collaborative filtering approach.</p>
 <p><b>Interpretation</b>: This consistency suggests that MSD (similarity = 1/(1+mean_squared_difference)) better captures the fundamental rating behavior patterns - penalizing large disagreements more heavily - regardless of whether we compare users or items. The squared difference term makes it more sensitive to rating discrepancies than Cosine's angular measure or Pearson's correlation.</p>
@@ -197,6 +204,8 @@
 <p><b>Underlying Cause</b>: The different saturation points reflect the dataset's structure - denser user-user correlations (671 users rating similar movies) versus sparser item-item patterns (9,000 movies with fewer overlapping raters). This explains why User-CF saturates earlier while Item-CF benefits from additional neighbors.</p>
 <h3>(g) Best Number of Neighbors (K)</h3>
 <ul><li>  <b>User-Based CF</b>: Best K is <b>40</b> (RMSE = 0.9831).</li><li>  <b>Item-Based CF</b>: Best K is <b>60</b> (RMSE = 0.9767) (within the tested range).</li></ul>
+<p><b>Is the best K of User-based collaborative filtering the same with the best K of Item-based collaborative filtering?</b></p>
+<p><b>Answer: NO.</b> The best K values are different: K=40 for User-CF and K=60 for Item-CF.</p>
 <p><b>Conclusion</b>: The best K values differ significantly between the two approaches:</p>
 <p><b>User-Based CF</b>: Optimal K=40 (RMSE=0.9831), beyond which performance degrades (K=60: 0.9839) due to noise from less-similar users diluting prediction quality. The sharp initial improvement (K=5→10: 3.5% gain) followed by gradual refinement (K=10→40: 1.3% gain) suggests the top 40 most similar users capture the essential preference signals.</p>
 <p><b>Item-Based CF</b>: Optimal K=60 (RMSE=0.9767) within tested range, with continued improvement trend suggesting potential for even higher K values. The sustained improvement throughout (K=5→60: 10.4% gain with no plateau) indicates that item-item relationships are sparser and benefit from broader neighborhoods to overcome data sparsity.</p>
