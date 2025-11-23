@@ -1,6 +1,6 @@
 # Clustering and Recommender Systems
 
-K-Means clustering with multiple similarity metrics and collaborative filtering recommendation systems. Implemented from scratch using NumPy.
+K-Means clustering implemented from scratch and collaborative filtering recommendation systems using Surprise library.
 
 ## 🎯 Overview
 
@@ -29,18 +29,19 @@ This project implements two major ML application areas:
 - High-dimensional data benefits from direction-based metrics over magnitude
 
 ### Task 2: Recommendation Systems
+- **Implementation**: Using [Surprise Library](http://surpriselib.com/) (scikit-surprise)
 - **Algorithms**:
-  - Probabilistic Matrix Factorization (PMF)
-  - User-based Collaborative Filtering
-  - Item-based Collaborative Filtering
+  - Probabilistic Matrix Factorization (PMF) via SVD
+  - User-based Collaborative Filtering with KNNWithMeans
+  - Item-based Collaborative Filtering with KNNWithMeans
 - **Similarity Metrics**: Cosine, MSD (Mean Squared Difference), Pearson
 - **Dataset**: MovieLens Small (100,000+ ratings)
 - **Evaluation**: 5-fold cross-validation with MAE and RMSE metrics
 
 **Key Findings**:
-- User-based CF performs best (MAE: 0.7620, RMSE: 0.9888)
-- MSD similarity outperforms Cosine and Pearson
-- Optimal K neighbors: 40 for User-CF, 60 for Item-CF
+- Results will be updated after running the code
+- Multiple similarity metrics tested for comprehensive analysis
+- K neighbors optimization from 5 to 60
 
 ## 📊 Results
 
@@ -52,11 +53,13 @@ This project implements two major ML application areas:
 | Jaccard | 3,659.85 | 0.6012 | 5.84s |
 
 ### Recommendation System Performance (5-Fold CV)
+**Note:** Results will be populated after running task2_recommender.py
+
 | Algorithm | MAE | RMSE |
 |-----------|-----|------|
-| PMF | 0.8370 | 1.1049 |
-| **User-Based CF** | **0.7620** | **0.9888** |
-| Item-Based CF | 0.7924 | 1.0137 |
+| PMF | TBD | TBD |
+| User-Based CF | TBD | TBD |
+| Item-Based CF | TBD | TBD |
 
 ## 🚀 Usage
 
@@ -82,13 +85,20 @@ Generates:
 ## 📦 Requirements
 
 ```
-numpy
-matplotlib
+numpy>=1.21.0
+matplotlib>=3.4.0
+pandas>=1.3.0
+scikit-surprise>=1.1.1
 ```
 
 Install dependencies:
 ```bash
-pip install numpy matplotlib
+pip install -r requirements.txt
+```
+
+Or manually:
+```bash
+pip install numpy matplotlib pandas scikit-surprise
 ```
 
 ## 📂 Project Structure
@@ -130,9 +140,10 @@ The `archive/` folder contains `ratings_small.csv` from the MovieLens dataset.
 - Majority vote labeling for purity calculation
 
 ### Recommendation Systems
+- Implemented using Surprise library for optimized performance
 - 5-fold cross-validation for robust evaluation
-- K-nearest neighbors: tested [5, 10, 20, 40, 60]
-- PMF with SGD optimization (20 epochs, learning rate=0.005)
+- K-nearest neighbors: tested range [5, 10, 15, ..., 60]
+- PMF via SVD (20 factors, 20 epochs, unbiased)
 
 ## 📈 Visualizations
 
@@ -145,18 +156,19 @@ The project includes comprehensive visualizations:
 
 1. **Metric Selection Matters**: For high-dimensional data (images), angle-based metrics (Cosine) outperform magnitude-based (Euclidean)
 
-2. **Collaborative Filtering Superiority**: User-based CF with proper similarity metrics outperforms basic matrix factorization
+2. **Library vs From-Scratch**: Using optimized libraries (Surprise) provides better performance and reliability for production systems
 
-3. **Consistency Across Methods**: MSD similarity performs best for both User-CF and Item-CF, showing consistent behavior
+3. **KNNWithMeans Advantage**: Using mean-adjusted collaborative filtering accounts for user/item rating biases, improving accuracy
 
-4. **Neighbor Count Optimization**: Different optimal K for User-CF (40) vs Item-CF (60), suggesting different sparsity patterns
+4. **Comprehensive Evaluation**: Testing multiple K values and similarity metrics ensures optimal hyperparameter selection
 
 ## 🛠️ Implementation Details
 
-- **No ML Libraries**: Implemented from scratch using only NumPy
-- **Efficient Computations**: Vectorized operations for performance
+- **Task 1 (K-Means)**: Implemented from scratch using only NumPy with vectorized operations
+- **Task 2 (Recommender)**: Using Surprise library for professional-grade implementations
 - **Multiple Metrics**: Comprehensive comparison across different approaches
 - **Reproducible**: Fixed random seeds and documented parameters
+- **Efficient**: Leverages optimized algorithms and data structures
 
 ## 📝 License
 

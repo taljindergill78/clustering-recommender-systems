@@ -67,46 +67,47 @@ Comparing SSEs when using specific single terminating conditions (with a high ma
 ## Task 2: Recommender Systems
 
 **Dataset**: MovieLens Small (`ratings_small.csv`)
+**Implementation**: Surprise Library (scikit-surprise)
 **Evaluation**: 5-Fold Cross-Validation
 
 ### (c) Average MAE and RMSE (5-Fold CV)
 
-All three models were evaluated using rigorous 5-fold cross-validation on the MovieLens Small dataset (100,000+ ratings from 600+ users and 9,000+ movies). The table below presents the average performance across all folds, with lower values indicating better predictive accuracy.
+All three models were evaluated using rigorous 5-fold cross-validation on the MovieLens Small dataset (100,004 ratings from 671 users and 9,066 movies). The implementation uses the Surprise library: SVD for PMF and KNNWithMeans for collaborative filtering. The table below presents the average performance across all folds, with lower values indicating better predictive accuracy.
 
 | Algorithm | MAE (Mean) | RMSE (Mean) |
 | :--- | :--- | :--- |
-| **PMF** | 0.8370 | 1.1049 |
-| **User-Based CF** | **0.7620** | **0.9888** |
-| **Item-Based CF** | 0.7924 | 1.0137 |
+| **PMF (SVD)** | 0.7456 | 0.9744 |
+| **User-Based CF** | **0.7077** | **0.9236** |
+| **Item-Based CF** | 0.7115 | 0.9289 |
 
-**Detailed Fold Results - PMF:**
-| Fold | MAE | RMSE |
-| :--- | :--- | :--- |
-| 1 | 0.8311 | 1.1007 |
-| 2 | 0.8429 | 1.1133 |
-| 3 | 0.8472 | 1.1155 |
-| 4 | 0.8341 | 1.1040 |
-| 5 | 0.8295 | 1.0912 |
+**Detailed Fold Results - PMF (SVD):**
+| Fold | MAE | RMSE | Fit Time (s) | Test Time (s) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 0.7511 | 0.9796 | 0.13 | 0.05 |
+| 2 | 0.7422 | 0.9696 | 0.13 | 0.05 |
+| 3 | 0.7397 | 0.9692 | 0.13 | 0.03 |
+| 4 | 0.7448 | 0.9717 | 0.13 | 0.03 |
+| 5 | 0.7502 | 0.9818 | 0.13 | 0.05 |
 
-**Detailed Fold Results - User-Based CF (Cosine):**
-| Fold | MAE | RMSE |
-| :--- | :--- | :--- |
-| 1 | 0.7660 | 0.9909 |
-| 2 | 0.7604 | 0.9876 |
-| 3 | 0.7641 | 0.9947 |
-| 4 | 0.7603 | 0.9862 |
-| 5 | 0.7591 | 0.9848 |
+**Detailed Fold Results - User-Based CF (Cosine, K=40):**
+| Fold | MAE | RMSE | Fit Time (s) | Test Time (s) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 0.7018 | 0.9197 | 0.04 | 0.45 |
+| 2 | 0.7127 | 0.9289 | 0.06 | 0.45 |
+| 3 | 0.7095 | 0.9255 | 0.05 | 0.42 |
+| 4 | 0.7087 | 0.9249 | 0.05 | 0.49 |
+| 5 | 0.7059 | 0.9187 | 0.05 | 0.45 |
 
-**Detailed Fold Results - Item-Based CF (Cosine):**
-| Fold | MAE | RMSE |
-| :--- | :--- | :--- |
-| 1 | 0.7808 | 0.9965 |
-| 2 | 0.7971 | 1.0224 |
-| 3 | 0.7883 | 1.0094 |
-| 4 | 0.7964 | 1.0196 |
-| 5 | 0.7993 | 1.0207 |
+**Detailed Fold Results - Item-Based CF (Cosine, K=40):**
+| Fold | MAE | RMSE | Fit Time (s) | Test Time (s) |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | 0.7045 | 0.9218 | 1.64 | 1.78 |
+| 2 | 0.7152 | 0.9307 | 1.31 | 1.75 |
+| 3 | 0.7159 | 0.9354 | 1.21 | 1.75 |
+| 4 | 0.7118 | 0.9289 | 1.37 | 1.76 |
+| 5 | 0.7099 | 0.9279 | 1.26 | 1.72 |
 
-**Performance Consistency**: User-Based CF demonstrates both the best performance and excellent consistency across folds (MAE std dev ±0.003, RMSE std dev ±0.004), indicating robust generalization. Item-Based CF shows slightly higher variance (MAE std dev ±0.007), while PMF exhibits the most variance (MAE std dev ±0.007, RMSE std dev ±0.010).
+**Performance Consistency**: User-Based CF demonstrates both the best performance and excellent consistency across folds (MAE std dev ±0.0037, RMSE std dev ±0.0038), indicating robust generalization. Item-Based CF shows slightly higher variance (MAE std dev ±0.0041, RMSE std dev ±0.0044), while PMF exhibits the most variance (MAE std dev ±0.0044, RMSE std dev ±0.0053).
 
 ### (d) Performance Comparison
 
@@ -114,137 +115,137 @@ All three models were evaluated using rigorous 5-fold cross-validation on the Mo
 
 **Answer: User-Based Collaborative Filtering** is the best model for this movie rating dataset.
 
-**Best Model - User-Based Collaborative Filtering**: User-Based CF achieves the best overall performance with MAE=0.7620 and RMSE=0.9888, outperforming Item-Based CF by 3.8% in MAE and 2.5% in RMSE. This superiority can be attributed to the dataset's user-centric rating patterns, where users with similar tastes provide more reliable prediction signals than item similarity.
+**Best Model - User-Based Collaborative Filtering**: User-Based CF achieves the best overall performance with MAE=0.7077 and RMSE=0.9236, outperforming Item-Based CF by 0.5% in MAE (0.7115) and 0.6% in RMSE (0.9289). This superiority can be attributed to the dataset's user-centric rating patterns, where users with similar tastes provide more reliable prediction signals than item similarity. The KNNWithMeans algorithm effectively centers predictions around user-specific baselines, improving accuracy.
 
-**PMF Limitations**: PMF performs the worst (MAE=0.8370, RMSE=1.1049), with 9.8% higher MAE than User-CF. This is primarily due to the basic SGD implementation without advanced techniques like bias terms, regularization tuning, or adaptive learning rates. The matrix factorization approach also struggles with the dataset's sparsity (~98.3% sparse).
+**PMF (SVD) Performance**: PMF using Surprise's SVD implementation achieves MAE=0.7456 and RMSE=0.9744, performing worse than both CF methods (5.4% higher MAE than User-CF). While SVD with proper bias terms and regularization performs better than basic implementations, it still struggles compared to neighborhood-based methods on this dataset. The latent factor approach requires sufficient data density to learn meaningful representations, and with 671 users and 9,066 movies, collaborative filtering's direct similarity computations prove more effective.
 
-**Item-Based CF Middle Ground**: Item-Based CF achieves intermediate performance (MAE=0.7924, RMSE=1.0137), performing 4.0% worse than User-CF. The item-item similarity matrix benefits from more stable patterns (items don't change taste), but the computational overhead and sparsity in item comparisons limit its effectiveness compared to user-based approaches on this dataset.
+**Item-Based CF Performance**: Item-Based CF achieves intermediate performance (MAE=0.7115, RMSE=0.9289), performing slightly worse than User-CF. The item-item similarity matrix benefits from more stable patterns (items don't change taste over time), but the larger number of items (9,066) versus users (671) creates sparsity challenges. User-CF benefits from denser user-user overlaps in rating history, enabling more reliable similarity estimates.
 
 ### (e) Impact of Similarity Metrics
 
-We evaluated all three similarity metrics (Cosine, MSD, Pearson) using 5-fold cross-validation for both User-based and Item-based CF. This comprehensive evaluation isolates the effect of similarity metrics and provides robust performance estimates.
+We evaluated all three similarity metrics (Cosine, MSD, Pearson) using 5-fold cross-validation for both User-based and Item-based CF with K=40 neighbors. This comprehensive evaluation isolates the effect of similarity metrics and provides robust performance estimates.
 
-| Metric | User-CF RMSE | Item-CF RMSE |
-| :--- | :--- | :--- |
-| **Cosine** | 0.9897 | 1.0161 |
-| **MSD** | **0.9529** | **0.9467** |
-| **Pearson** | 0.9926 | 1.0132 |
+| Metric | User-CF MAE | User-CF RMSE | Item-CF MAE | Item-CF RMSE |
+| :--- | :--- | :--- | :--- | :--- |
+| **Cosine** | 0.7068 | 0.9232 | 0.7113 | 0.9286 |
+| **MSD** | **0.7038** | **0.9200** | **0.7014** | **0.9159** |
+| **Pearson** | 0.7044 | 0.9240 | 0.7077 | 0.9287 |
 
 **Detailed Fold Results - User-CF with Cosine:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7601 | 0.9844 |
-| 2 | 0.7595 | 0.9857 |
-| 3 | 0.7640 | 0.9917 |
-| 4 | 0.7651 | 0.9931 |
-| 5 | 0.7644 | 0.9939 |
+| 1 | 0.7010 | 0.9172 |
+| 2 | 0.7061 | 0.9229 |
+| 3 | 0.7059 | 0.9206 |
+| 4 | 0.7134 | 0.9337 |
+| 5 | 0.7078 | 0.9217 |
 
 **Detailed Fold Results - Item-CF with Cosine:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7994 | 1.0217 |
-| 2 | 0.7955 | 1.0195 |
-| 3 | 0.7892 | 1.0091 |
-| 4 | 0.7966 | 1.0178 |
-| 5 | 0.7939 | 1.0127 |
+| 1 | 0.7138 | 0.9307 |
+| 2 | 0.7135 | 0.9315 |
+| 3 | 0.7052 | 0.9240 |
+| 4 | 0.7128 | 0.9292 |
+| 5 | 0.7113 | 0.9275 |
 
 **Detailed Fold Results - User-CF with MSD:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7323 | 0.9567 |
-| 2 | 0.7277 | 0.9451 |
-| 3 | 0.7267 | 0.9529 |
-| 4 | 0.7369 | 0.9593 |
-| 5 | 0.7312 | 0.9508 |
+| 1 | 0.7000 | 0.9171 |
+| 2 | 0.7065 | 0.9210 |
+| 3 | 0.7012 | 0.9211 |
+| 4 | 0.7073 | 0.9235 |
+| 5 | 0.7038 | 0.9175 |
 
 **Detailed Fold Results - Item-CF with MSD:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7297 | 0.9408 |
-| 2 | 0.7317 | 0.9446 |
-| 3 | 0.7340 | 0.9513 |
-| 4 | 0.7291 | 0.9450 |
-| 5 | 0.7370 | 0.9515 |
+| 1 | 0.7014 | 0.9191 |
+| 2 | 0.6974 | 0.9078 |
+| 3 | 0.7075 | 0.9241 |
+| 4 | 0.6982 | 0.9134 |
+| 5 | 0.7028 | 0.9151 |
 
 **Detailed Fold Results - User-CF with Pearson:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7601 | 0.9849 |
-| 2 | 0.7684 | 0.9941 |
-| 3 | 0.7670 | 0.9891 |
-| 4 | 0.7693 | 0.9950 |
-| 5 | 0.7738 | 1.0002 |
+| 1 | 0.7005 | 0.9188 |
+| 2 | 0.7077 | 0.9287 |
+| 3 | 0.7035 | 0.9225 |
+| 4 | 0.7033 | 0.9218 |
+| 5 | 0.7071 | 0.9285 |
 
 **Detailed Fold Results - Item-CF with Pearson:**
 | Fold | MAE | RMSE |
 | :--- | :--- | :--- |
-| 1 | 0.7905 | 1.0161 |
-| 2 | 0.7892 | 1.0168 |
-| 3 | 0.7894 | 1.0124 |
-| 4 | 0.7865 | 1.0131 |
-| 5 | 0.7823 | 1.0074 |
+| 1 | 0.7106 | 0.9339 |
+| 2 | 0.7104 | 0.9356 |
+| 3 | 0.7027 | 0.9214 |
+| 4 | 0.7094 | 0.9288 |
+| 5 | 0.7054 | 0.9237 |
 
 **Plot**:
 ![Similarity Impact](similarity_impact.png)
 
-**Observation**: **MSD** (Mean Squared Difference) similarity significantly outperforms Cosine and Pearson for both User and Item-based CF on this dataset.
+**Observation**: **MSD** (Mean Squared Difference) similarity outperforms Cosine and Pearson for both User and Item-based CF on this dataset, though the differences are smaller than with custom implementations.
 
 **Is the impact of the three metrics on User based Collaborative Filtering consistent with the impact of the three metrics on Item based Collaborative Filtering?**
 
 **Answer: YES.** The impact of the three metrics on User-based CF is highly consistent with the impact on Item-based CF, demonstrating robust metric behavior:
 
-**Ranking Consistency**: MSD consistently ranks first (lowest RMSE) for both User-CF (0.9529) and Item-CF (0.9467), achieving 3.7% and 6.8% improvements over Cosine respectively. Cosine and Pearson rank second and third in both cases, with minimal difference between them (<0.3% RMSE).
+**Ranking Consistency**: MSD consistently ranks first (lowest RMSE) for both User-CF (0.9200) and Item-CF (0.9159), achieving 0.3% and 1.4% improvements over Cosine respectively. Cosine performs better than Pearson for User-CF, while the order is reversed for Item-CF, but differences are minimal (<0.1% RMSE).
 
-**Performance Gaps**: The relative performance gaps are similar across both methods - MSD's advantage over Cosine is 3.7% for User-CF and 6.8% for Item-CF, indicating that MSD's superior rating distance measurement translates consistently regardless of the collaborative filtering approach.
+**Performance Gaps**: While MSD leads in both cases, the advantage is modest (0.3-1.4% improvement), indicating that the Surprise library's KNNWithMeans algorithm with baseline adjustment reduces the sensitivity to similarity metric choice compared to basic CF implementations. The standardized preprocessing and mean-centering in KNNWithMeans equalizes metric performance.
 
-**Interpretation**: This consistency suggests that MSD (similarity = 1/(1+mean_squared_difference)) better captures the fundamental rating behavior patterns - penalizing large disagreements more heavily - regardless of whether we compare users or items. The squared difference term makes it more sensitive to rating discrepancies than Cosine's angular measure or Pearson's correlation.
+**Interpretation**: This consistency suggests that MSD (similarity = 1/(1+mean_squared_difference)) better captures rating behavior patterns by heavily penalizing large disagreements, regardless of whether we compare users or items. However, the KNNWithMeans baseline adjustment (subtracting user/item means) makes all three metrics perform similarly, as mean-centering reduces the impact of rating scale differences that Cosine and Pearson naturally handle.
 
 ### (f) Impact of Number of Neighbors (K)
 
-We performed granular testing of K values from 5 to 60 in steps of 5 to thoroughly understand the impact of neighborhood size on recommendation quality. RMSE values are shown below:
+We performed granular testing of K values from 5 to 60 in steps of 5 to thoroughly understand the impact of neighborhood size on recommendation quality. RMSE values using Cosine similarity are shown below:
 
 | K | User-CF RMSE | Item-CF RMSE |
 | :--- | :--- | :--- |
-| 5 | 1.0317 | 1.0906 |
-| 10 | 0.9956 | 1.0395 |
-| 15 | 0.9877 | 1.0191 |
-| 20 | 0.9847 | 1.0067 |
-| 25 | 0.9839 | 0.9993 |
-| 30 | 0.9834 | 0.9935 |
-| 35 | 0.9833 | 0.9900 |
-| 40 | 0.9831 | 0.9865 |
-| 45 | 0.9831 | 0.9838 |
-| 50 | 0.9832 | 0.9808 |
-| 55 | 0.9837 | 0.9788 |
-| 60 | 0.9839 | 0.9767 |
+| 5 | 0.9642 | 0.9924 |
+| 10 | 0.9364 | 0.9574 |
+| 15 | 0.9289 | 0.9459 |
+| 20 | 0.9265 | 0.9393 |
+| 25 | 0.9237 | 0.9349 |
+| 30 | 0.9241 | 0.9304 |
+| 35 | 0.9237 | 0.9299 |
+| 40 | 0.9234 | 0.9286 |
+| 45 | 0.9232 | 0.9266 |
+| 50 | 0.9233 | 0.9245 |
+| 55 | 0.9243 | 0.9245 |
+| 60 | 0.9231 | 0.9266 |
 
 **Plot**:
 ![K Impact](k_impact.png)
 
 **Observation**: Performance improvement follows a logarithmic pattern with diminishing returns as K increases:
 
-**User-CF Saturation**: User-CF shows rapid improvement from K=5 (RMSE=1.0317) to K=40 (RMSE=0.9831), achieving 4.7% error reduction. Beyond K=40, gains plateau and performance slightly degrades (K=60: RMSE=0.9839), indicating saturation around K=40 where the most similar users have been captured. The degradation beyond K=50 suggests noise from less-similar users dilutes prediction quality.
+**User-CF Saturation**: User-CF shows rapid improvement from K=5 (RMSE=0.9642) to K=45 (RMSE=0.9232), achieving 4.3% error reduction. Beyond K=45, gains plateau with slight fluctuations (K=60: RMSE=0.9231), indicating saturation around K=45-60 where the most similar users have been captured. The minimal variation in the K=30-60 range (±0.01 RMSE) suggests the algorithm has converged to an optimal neighborhood size.
 
-**Item-CF Continued Benefit**: Item-CF exhibits more gradual but sustained improvement throughout the K range, with 10.4% error reduction from K=5 (RMSE=1.0906) to K=60 (RMSE=0.9767). Unlike User-CF, Item-CF shows no saturation within the tested range, with consistent improvement even at K=60, suggesting sparser item-item relationships require more neighbors for reliable predictions.
+**Item-CF Continued Benefit**: Item-CF exhibits more gradual but sustained improvement throughout the K range, with 6.8% error reduction from K=5 (RMSE=0.9924) to K=50/55 (RMSE=0.9245). Unlike User-CF, Item-CF shows consistent gains until K=55, with a slight increase at K=60 (RMSE=0.9266), suggesting optimal K lies in the 50-55 range. The sparser item-item relationships (9,066 movies) require more neighbors than the denser user-user patterns (671 users).
 
-**Underlying Cause**: The different saturation points reflect the dataset's structure - denser user-user correlations (671 users rating similar movies) versus sparser item-item patterns (9,000 movies with fewer overlapping raters). This explains why User-CF saturates earlier while Item-CF benefits from additional neighbors.
+**Underlying Cause**: The different saturation points reflect the dataset's structure - denser user-user correlations (671 users rating similar movies) versus sparser item-item patterns (9,066 movies with fewer overlapping raters). This explains why User-CF saturates earlier while Item-CF benefits from additional neighbors up to K=55.
 
 ### (g) Best Number of Neighbors (K)
 
-*   **User-Based CF**: Best K is **40** (RMSE = 0.9831).
-*   **Item-Based CF**: Best K is **60** (RMSE = 0.9767) (within the tested range).
+*   **User-Based CF**: Best K is **60** (RMSE = 0.9231).
+*   **Item-Based CF**: Best K is **55** (RMSE = 0.9245) (within the tested range).
 
 **Is the best K of User-based collaborative filtering the same with the best K of Item-based collaborative filtering?**
 
-**Answer: NO.** The best K values are different: K=40 for User-CF and K=60 for Item-CF.
+**Answer: NO.** The best K values are different: K=60 for User-CF and K=55 for Item-CF.
 
-**Conclusion**: The best K values differ significantly between the two approaches:
+**Conclusion**: The best K values differ between the two approaches:
 
-**User-Based CF**: Optimal K=40 (RMSE=0.9831), beyond which performance degrades (K=60: 0.9839) due to noise from less-similar users diluting prediction quality. The sharp initial improvement (K=5→10: 3.5% gain) followed by gradual refinement (K=10→40: 1.3% gain) suggests the top 40 most similar users capture the essential preference signals.
+**User-Based CF**: Optimal K=60 (RMSE=0.9231), though performance is nearly flat from K=45-60 (variance ±0.01), suggesting any K in the 45-60 range performs well. The sharp initial improvement (K=5→10: 2.9% gain) followed by gradual refinement (K=10→60: 1.4% gain) suggests the top 45-60 most similar users capture the essential preference signals, with marginal additional benefit from increasing K beyond 45.
 
-**Item-Based CF**: Optimal K=60 (RMSE=0.9767) within tested range, with continued improvement trend suggesting potential for even higher K values. The sustained improvement throughout (K=5→60: 10.4% gain with no plateau) indicates that item-item relationships are sparser and benefit from broader neighborhoods to overcome data sparsity.
+**Item-Based CF**: Optimal K=55 (RMSE=0.9245) within tested range, with slight degradation at K=60 (RMSE=0.9266). The sustained improvement from K=5→55 (6.8% gain) indicates that item-item relationships are sparser and benefit from broader neighborhoods to overcome data sparsity, but adding too many neighbors (K=60) introduces noise from less-similar items.
 
-**Practical Implication**: The distinct optimal K values (40 vs 60) demonstrate that hyperparameter tuning must be method-specific. User-CF can operate efficiently with fewer neighbors, offering computational advantages (40 similarity computations vs 60), while Item-CF requires larger neighborhoods to overcome sparsity, trading computation for accuracy. For production systems, User-CF's lower optimal K provides faster inference while maintaining competitive accuracy.
+**Practical Implication**: The distinct optimal K values (60 vs 55) demonstrate that hyperparameter tuning must be method-specific, though both methods converge to similar ranges (50-60). User-CF benefits from slightly larger neighborhoods due to richer user-user similarity signals, while Item-CF requires careful balancing to avoid dilution from dissimilar items. The similar optimal ranges (±5) suggest the KNNWithMeans algorithm handles both cases robustly, with computational cost being the primary differentiator (User-CF: faster fit, slower prediction; Item-CF: slower fit, faster prediction for large item catalogs).
 
 ## Code Access
 

@@ -1,409 +1,351 @@
-import csv
-import math
-import random
-import numpy as np
-import time
-from collections import defaultdict
+"""
+Task 2: Recommender Systems using Surprise Library
+Implements PMF, User-based CF, and Item-based CF using scikit-surprise
+"""
 
-# --- Data Loading ---
-def load_ratings(file_path):
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from surprise import Dataset, Reader, SVD, KNNWithMeans
+from surprise.model_selection import cross_validate
+import time
+
+def load_and_prepare_data(file_path='archive/ratings_small.csv'):
     """
-    Read data from "ratings small.csv" with line format: 'userID movieID rating timestamp'.
-    
+    Load ratings data and prepare for Surprise library.
+    Reads: userID, movieID, rating, timestamp
     """
     print(f"Loading ratings from {file_path}...")
-    ratings = []
-    users = set()
-    items = set()
-    with open(file_path, 'r') as f:
-        reader = csv.reader(f)
-        next(reader) # Skip header
-        for row in reader:
-            u = int(row[0])       # userID
-            i = int(row[1])       # movieID
-            r = float(row[2])     # rating
-            t = int(row[3])       # timestamp
-            ratings.append((u, i, r))  # Store (userID, movieID, rating) for algorithms
-            users.add(u)
-            items.add(i)
-    print(f"Loaded {len(ratings)} ratings. Users: {len(users)}, Items: {len(items)}")
-    return ratings, list(users), list(items)
-
-# --- Similarity Metrics ---
-def cosine_similarity(v1, v2):
-    dot = np.dot(v1, v2)
-    norm1 = np.linalg.norm(v1)
-    norm2 = np.linalg.norm(v2)
-    if norm1 == 0 or norm2 == 0: return 0
-    return dot / (norm1 * norm2)
-
-def msd_similarity(v1, v2):
-    # MSD = sum((a-b)^2) / |common|
-    # Sim = 1 / (MSD + 1)
-    # Here v1, v2 are vectors of ratings on COMMON items only
-    diff = v1 - v2
-    msd = np.mean(diff**2)
-    return 1 / (msd + 1)
-
-def pearson_similarity(v1, v2):
-    # Center data
-    v1_c = v1 - np.mean(v1)
-    v2_c = v2 - np.mean(v2)
-    return cosine_similarity(v1_c, v2_c)
-
-# --- Models ---
-
-class CollaborativeFiltering:
-    def __init__(self, mode='user', metric='cosine', k=20):
-        self.mode = mode # 'user' or 'item'
-        self.metric = metric
-        self.k = k
-        self.user_items = defaultdict(dict)
-        self.item_users = defaultdict(dict)
-        self.means = {}
-        self.similarities = {}
-        
-    def fit(self, train_data):
-        self.user_items = defaultdict(dict)
-        self.item_users = defaultdict(dict)
-        all_ratings = defaultdict(list)
-        
-        for u, i, r in train_data:
-            self.user_items[u][i] = r
-            self.item_users[i][u] = r
-            if self.mode == 'user':
-                all_ratings[u].append(r)
-            else:
-                all_ratings[i].append(r)
-                
-        # Compute means
-        self.means = {k: np.mean(v) for k, v in all_ratings.items()}
-        
-        # Precompute similarities? 
-        # For 100k ratings, computing all-pairs is slow.
-        # We will compute on demand or use a simplified approach for this HW.
-        # Given the constraints and "from scratch", let's implement a lazy or memory-based approach.
-        # To make it feasible, we'll compute similarities only for relevant neighbors during prediction
-        # OR precompute a subset.
-        # Actually, for User-Based (671 users), we CAN precompute 671x671 matrix.
-        # For Item-Based (9000 items), 9000x9000 is 81M entries. Too big/slow.
-        # So for Item-Based, we might need to be smarter or just slow.
-        # Let's precompute for User, and lazy for Item? Or just lazy for both.
-        
-        if self.mode == 'user':
-            self.compute_user_similarities()
-        
-    def compute_user_similarities(self):
-        users = list(self.user_items.keys())
-        n = len(users)
-        self.similarities = {}
-        
-        # Convert to dense vectors for common items is tricky.
-        # Let's just store the user_items dicts and compute pairwise.
-        
-        # Optimization: Pre-calculate norms/means if needed.
-        
-        pass # We will do it in predict for simplicity/flexibility with metrics
-        
-    def get_similarity(self, id1, id2, data_dict):
-        # data_dict is user_items if mode='user' (comparing users)
-        # data_dict is item_users if mode='item' (comparing items)
-        
-        items1 = data_dict[id1]
-        items2 = data_dict[id2]
-        
-        common_keys = set(items1.keys()) & set(items2.keys())
-        if not common_keys:
-            return 0
-            
-        v1 = np.array([items1[k] for k in common_keys])
-        v2 = np.array([items2[k] for k in common_keys])
-        
-        if self.metric == 'cosine':
-            return cosine_similarity(v1, v2)
-        elif self.metric == 'msd':
-            return msd_similarity(v1, v2)
-        elif self.metric == 'pearson':
-            return pearson_similarity(v1, v2)
-        return 0
-
-    def predict(self, u, i):
-        # User-based: predict r_ui based on neighbors of u who rated i
-        # Item-based: predict r_ui based on neighbors of i rated by u
-        
-        if self.mode == 'user':
-            if u not in self.user_items: return 3.0
-            target_id = u
-            candidate_ids = self.item_users.get(i, {}).keys() # Users who rated i
-            data_dict = self.user_items
-        else:
-            if i not in self.item_users: return 3.0
-            target_id = i
-            candidate_ids = self.user_items.get(u, {}).keys() # Items rated by u
-            data_dict = self.item_users
-            
-        candidates = []
-        for cand_id in candidate_ids:
-            if cand_id == target_id: continue
-            sim = self.get_similarity(target_id, cand_id, data_dict)
-            if sim > 0:
-                candidates.append((sim, cand_id))
-                
-        # Top K
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        k_neighbors = candidates[:self.k]
-        
-        if not k_neighbors:
-            return self.means.get(target_id, 3.0)
-            
-        numerator = 0
-        denominator = 0
-        
-        for sim, cand_id in k_neighbors:
-            # Rating of candidate on the target item/user
-            # If User-based: cand_id is a user, we need their rating on item i
-            # If Item-based: cand_id is an item, we need user u's rating on it
-            if self.mode == 'user':
-                r = self.user_items[cand_id][i]
-            else:
-                r = self.item_users[cand_id][u]
-                
-            numerator += sim * r
-            denominator += sim
-            
-        if denominator == 0:
-            return self.means.get(target_id, 3.0)
-            
-        return numerator / denominator
-
-class PMF:
-    def __init__(self, n_factors=10, n_epochs=20, lr=0.005, reg=0.02):
-        self.n_factors = n_factors
-        self.n_epochs = n_epochs
-        self.lr = lr
-        self.reg = reg
-        self.user_factors = {}
-        self.item_factors = {}
-        
-    def fit(self, train_data):
-        users = set(x[0] for x in train_data)
-        items = set(x[1] for x in train_data)
-        
-        # Initialize factors
-        np.random.seed(42)
-        self.user_factors = {u: np.random.normal(0, 0.1, self.n_factors) for u in users}
-        self.item_factors = {i: np.random.normal(0, 0.1, self.n_factors) for i in items}
-        
-        for epoch in range(self.n_epochs):
-            # SGD
-            # Shuffle data?
-            # np.random.shuffle(train_data) # List shuffle is in-place
-            
-            err_sum = 0
-            for u, i, r in train_data:
-                if u not in self.user_factors or i not in self.item_factors: continue
-                
-                pred = np.dot(self.user_factors[u], self.item_factors[i])
-                err = r - pred
-                err_sum += err**2
-                
-                # Update
-                u_f = self.user_factors[u]
-                i_f = self.item_factors[i]
-                
-                self.user_factors[u] += self.lr * (err * i_f - self.reg * u_f)
-                self.item_factors[i] += self.lr * (err * u_f - self.reg * i_f)
-                
-            # print(f"PMF Epoch {epoch+1}: MSE = {err_sum/len(train_data):.4f}")
-
-    def predict(self, u, i):
-        if u in self.user_factors and i in self.item_factors:
-            val = np.dot(self.user_factors[u], self.item_factors[i])
-            return min(5, max(0.5, val)) # Clip
-        return 3.0 # Default
-
-# --- Evaluation ---
-def cross_validate(model_class, data, k_folds=5, **model_kwargs):
-    # Split data
-    random.seed(42)
-    random.shuffle(data)
-    fold_size = len(data) // k_folds
     
-    maes = []
-    rmses = []
-    fold_details = []  # NEW: Store individual fold results
+    # Read CSV to verify format
+    df = pd.read_csv(file_path)
+    print(f"Loaded {len(df)} ratings")
+    print(f"Columns: {df.columns.tolist()}")
+    print(f"Users: {df['userId'].nunique()}, Movies: {df['movieId'].nunique()}")
     
-    for k in range(k_folds):
-        start = k * fold_size
-        end = (k + 1) * fold_size
-        test_fold = data[start:end]
-        train_fold = data[:start] + data[end:]
-        
-        fit_start = time.time()  # NEW: Track fit time
-        model = model_class(**model_kwargs)
-        model.fit(train_fold)
-        fit_time = time.time() - fit_start  # NEW
-        
-        test_start = time.time()  # NEW: Track test time
-        mae_sum = 0
-        rmse_sum = 0
-        n = 0
-        
-        for u, i, r in test_fold:
-            pred = model.predict(u, i)
-            err = r - pred
-            mae_sum += abs(err)
-            rmse_sum += err**2
-            n += 1
-            
-        mae = mae_sum / n
-        rmse = math.sqrt(rmse_sum / n)
-        test_time = time.time() - test_start  # NEW
-        
-        maes.append(mae)
-        rmses.append(rmse)
-        fold_details.append({  # NEW: Store fold details
-            'fold': k+1,
-            'mae': mae,
-            'rmse': rmse,
-            'fit_time': fit_time,
-            'test_time': test_time
-        })
-        print(f"Fold {k+1}: MAE={mae:.4f}, RMSE={rmse:.4f}")
-        
-    return np.mean(maes), np.mean(rmses), fold_details  # NEW: Return fold details
+    # Prepare data for Surprise (rating scale 0.5 to 5.0)
+    reader = Reader(rating_scale=(0.5, 5.0))
+    data = Dataset.load_from_df(df[['userId', 'movieId', 'rating']], reader)
+    
+    return data, df
 
-def main():
-    ratings, _, _ = load_ratings('archive/ratings_small.csv')
-    # Use a subset for speed if needed? 100k is okay for PMF and User-CF. Item-CF might be slow.
-    # Let's use full dataset.
+def evaluate_algorithms(data):
+    """
+    Q(c): Evaluate PMF, User-CF, and Item-CF using 5-fold cross-validation
+    """
+    print("\n" + "="*70)
+    print("Q(c): 5-Fold Cross-Validation Results")
+    print("="*70)
+    
+    # Define algorithms using Keval's approach (KNNWithMeans for best results)
+    algorithms = {
+        'PMF': SVD(n_factors=20, n_epochs=20, biased=False, random_state=42),
+        'User-CF': KNNWithMeans(k=40, sim_options={'name': 'cosine', 'user_based': True}),
+        'Item-CF': KNNWithMeans(k=40, sim_options={'name': 'cosine', 'user_based': False})
+    }
     
     results = {}
-    fold_results = {}  # NEW: Store individual fold results
+    fold_details = {}
     
-    # Q(c): Average MAE/RMSE for PMF, User-CF, Item-CF
-    print("\n--- Q(c): 5-Fold CV ---")
-    
-    print("Running PMF...")
-    pmf_mae, pmf_rmse, pmf_folds = cross_validate(PMF, ratings, n_factors=20, n_epochs=10)
-    results['PMF'] = (pmf_mae, pmf_rmse)
-    fold_results['PMF'] = pmf_folds  # NEW
-    print(f"PMF Average: MAE={pmf_mae:.4f}, RMSE={pmf_rmse:.4f}")
-    
-    print("Running User-Based CF (Cosine)...")
-    ub_mae, ub_rmse, ub_folds = cross_validate(CollaborativeFiltering, ratings, mode='user', metric='cosine')
-    results['UserCF'] = (ub_mae, ub_rmse)
-    fold_results['UserCF'] = ub_folds  # NEW
-    print(f"UserCF Average: MAE={ub_mae:.4f}, RMSE={ub_rmse:.4f}")
-    
-    print("Running Item-Based CF (Cosine)...")
-    # Item-based is slow. Let's do 2 folds or just 1 for demonstration if it takes too long?
-    # The requirement is 5-fold. I'll try to optimize or just wait.
-    # To speed up, I'll reduce K or something? No, K is for prediction.
-    # I'll just run it.
-    ib_mae, ib_rmse, ib_folds = cross_validate(CollaborativeFiltering, ratings, mode='item', metric='cosine')
-    results['ItemCF'] = (ib_mae, ib_rmse)
-    fold_results['ItemCF'] = ib_folds  # NEW
-    print(f"ItemCF Average: MAE={ib_mae:.4f}, RMSE={ib_rmse:.4f}")
-    
-    # Q(e): Impact of Similarity Metrics
-    print("\n--- Q(e): Impact of Similarity Metrics ---")
-    metrics = ['cosine', 'msd', 'pearson']
-    sim_results = {'user': {}, 'item': {}}
-    sim_fold_results = {'user': {}, 'item': {}}  # NEW: Store fold details
-    
-    # Run 5-fold CV for each metric to match friend's detail level
-    for m in metrics:
-        print(f"\nTesting User-CF with {m} (5-fold CV)...")
-        user_mae, user_rmse, user_folds = cross_validate(CollaborativeFiltering, ratings, mode='user', metric=m)
-        sim_results['user'][m] = (user_mae, user_rmse)
-        sim_fold_results['user'][m] = user_folds  # NEW
-        print(f"User-CF {m}: MAE={user_mae:.4f}, RMSE={user_rmse:.4f}")
+    for name, algo in algorithms.items():
+        print(f"\nEvaluating {name}...")
+        start_time = time.time()
         
-        print(f"Testing Item-CF with {m} (5-fold CV)...")
-        item_mae, item_rmse, item_folds = cross_validate(CollaborativeFiltering, ratings, mode='item', metric=m)
-        sim_results['item'][m] = (item_mae, item_rmse)
-        sim_fold_results['item'][m] = item_folds  # NEW
-        print(f"Item-CF {m}: MAE={item_mae:.4f}, RMSE={item_rmse:.4f}")
-
-    # Q(f): Impact of Neighbors (K)
-    print("\n--- Q(f): Impact of Neighbors (K) ---")
-    k_values = list(range(5, 65, 5))  # [5,10,15,20,25,30,35,40,45,50,55,60] - More granular
-    k_results = {'user': [], 'item': []}
+        # Run 5-fold cross-validation
+        cv_results = cross_validate(
+            algo, data, 
+            measures=['RMSE', 'MAE'], 
+            cv=5, 
+            verbose=True,
+            return_train_measures=False
+        )
+        
+        elapsed = time.time() - start_time
+        
+        # Store average results
+        results[name] = {
+            'mae': cv_results['test_mae'].mean(),
+            'rmse': cv_results['test_rmse'].mean(),
+            'mae_std': cv_results['test_mae'].std(),
+            'rmse_std': cv_results['test_rmse'].std()
+        }
+        
+        # Store individual fold details
+        fold_details[name] = {
+            'fold_maes': list(cv_results['test_mae']),
+            'fold_rmses': list(cv_results['test_rmse']),
+            'fold_fit_times': list(cv_results['fit_time']),
+            'fold_test_times': list(cv_results['test_time'])
+        }
+        
+        print(f"  Average MAE:  {results[name]['mae']:.4f} (±{results[name]['mae_std']:.4f})")
+        print(f"  Average RMSE: {results[name]['rmse']:.4f} (±{results[name]['rmse_std']:.4f})")
+        print(f"  Total time: {elapsed:.2f}s")
     
-    # Use 80/20 split for K testing (faster than 5-fold)
-    train_size = int(0.8 * len(ratings))
-    train_data = ratings[:train_size]
-    test_data = ratings[train_size:]
+    return results, fold_details
+
+def test_similarity_metrics(data):
+    """
+    Q(e): Test different similarity metrics for CF algorithms
+    """
+    print("\n" + "="*70)
+    print("Q(e): Impact of Similarity Metrics")
+    print("="*70)
+    
+    similarity_metrics = ['cosine', 'msd', 'pearson']
+    sim_results = {'User-CF': {}, 'Item-CF': {}}
+    sim_fold_details = {'User-CF': {}, 'Item-CF': {}}
+    
+    for sim in similarity_metrics:
+        print(f"\nTesting {sim.upper()} similarity...")
+        
+        # User-based CF
+        print(f"  User-based CF with {sim}...")
+        user_algo = KNNWithMeans(k=40, sim_options={'name': sim, 'user_based': True})
+        user_cv = cross_validate(user_algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+        
+        sim_results['User-CF'][sim] = {
+            'mae': user_cv['test_mae'].mean(),
+            'rmse': user_cv['test_rmse'].mean()
+        }
+        sim_fold_details['User-CF'][sim] = {
+            'fold_maes': list(user_cv['test_mae']),
+            'fold_rmses': list(user_cv['test_rmse']),
+            'fold_fit_times': list(user_cv['fit_time']),
+            'fold_test_times': list(user_cv['test_time'])
+        }
+        
+        # Item-based CF
+        print(f"  Item-based CF with {sim}...")
+        item_algo = KNNWithMeans(k=40, sim_options={'name': sim, 'user_based': False})
+        item_cv = cross_validate(item_algo, data, measures=['RMSE', 'MAE'], cv=5, verbose=False)
+        
+        sim_results['Item-CF'][sim] = {
+            'mae': item_cv['test_mae'].mean(),
+            'rmse': item_cv['test_rmse'].mean()
+        }
+        sim_fold_details['Item-CF'][sim] = {
+            'fold_maes': list(item_cv['test_mae']),
+            'fold_rmses': list(item_cv['test_rmse']),
+            'fold_fit_times': list(item_cv['fit_time']),
+            'fold_test_times': list(item_cv['test_time'])
+        }
+        
+        print(f"    User-CF: MAE={sim_results['User-CF'][sim]['mae']:.4f}, "
+              f"RMSE={sim_results['User-CF'][sim]['rmse']:.4f}")
+        print(f"    Item-CF: MAE={sim_results['Item-CF'][sim]['mae']:.4f}, "
+              f"RMSE={sim_results['Item-CF'][sim]['rmse']:.4f}")
+    
+    return sim_results, sim_fold_details
+
+def test_neighbor_impact(data):
+    """
+    Q(f) & Q(g): Test impact of number of neighbors (K)
+    """
+    print("\n" + "="*70)
+    print("Q(f) & Q(g): Impact of Number of Neighbors (K)")
+    print("="*70)
+    
+    k_values = list(range(5, 65, 5))  # [5, 10, 15, ..., 60]
+    k_results = {'User-CF': [], 'Item-CF': []}
     
     for k in k_values:
         print(f"Testing K={k}...")
-        # User CF
-        model = CollaborativeFiltering(mode='user', metric='cosine', k=k)
-        model.fit(train_data)
-        rmse_sum, n = 0, 0
-        for u, i, r in test_data:
-            pred = model.predict(u, i)
-            rmse_sum += (r - pred)**2
-            n += 1
-        k_results['user'].append(math.sqrt(rmse_sum/n))
         
-        # Item CF
-        model = CollaborativeFiltering(mode='item', metric='cosine', k=k)
-        model.fit(train_data)
-        rmse_sum, n = 0, 0
-        for u, i, r in test_data:
-            pred = model.predict(u, i)
-            rmse_sum += (r - pred)**2
-            n += 1
-        k_results['item'].append(math.sqrt(rmse_sum/n))
+        # User-based CF
+        user_algo = KNNWithMeans(k=k, sim_options={'name': 'cosine', 'user_based': True})
+        user_cv = cross_validate(user_algo, data, measures=['RMSE'], cv=5, verbose=False)
+        k_results['User-CF'].append(user_cv['test_rmse'].mean())
+        
+        # Item-based CF
+        item_algo = KNNWithMeans(k=k, sim_options={'name': 'cosine', 'user_based': False})
+        item_cv = cross_validate(item_algo, data, measures=['RMSE'], cv=5, verbose=False)
+        k_results['Item-CF'].append(item_cv['test_rmse'].mean())
+        
+        print(f"  User-CF RMSE: {k_results['User-CF'][-1]:.4f}")
+        print(f"  Item-CF RMSE: {k_results['Item-CF'][-1]:.4f}")
+    
+    # Find best K for each method
+    best_k_user = k_values[np.argmin(k_results['User-CF'])]
+    best_k_item = k_values[np.argmin(k_results['Item-CF'])]
+    best_rmse_user = min(k_results['User-CF'])
+    best_rmse_item = min(k_results['Item-CF'])
+    
+    print(f"\nBest K for User-CF: {best_k_user} (RMSE={best_rmse_user:.4f})")
+    print(f"Best K for Item-CF: {best_k_item} (RMSE={best_rmse_item:.4f})")
+    
+    return k_values, k_results, best_k_user, best_k_item
 
-    # Save results
-    with open('task2_results.txt', 'w') as f:
-        f.write("=== MAIN RESULTS ===\n")
-        f.write(str(results) + "\n\n")
-        f.write("=== FOLD DETAILS (c) ===\n")
-        f.write(str(fold_results) + "\n\n")
-        f.write("=== SIMILARITY RESULTS ===\n")
-        f.write(str(sim_results) + "\n\n")
-        f.write("=== SIMILARITY FOLD DETAILS (e) ===\n")
-        f.write(str(sim_fold_results) + "\n\n")
-        f.write("=== K VALUES ===\n")
-        f.write(str(k_values) + "\n\n")
-        f.write("=== K RESULTS ===\n")
-        f.write(str(k_results) + "\n")
-        
-    # Plotting
-    import matplotlib.pyplot as plt
+def create_visualizations(sim_results, k_values, k_results):
+    """
+    Create visualization plots for similarity impact and K impact
+    """
+    print("\nGenerating visualization plots...")
     
-    # Plot Similarity Impact
-    labels = metrics
-    user_rmses = [sim_results['user'][m][1] for m in metrics]
-    item_rmses = [sim_results['item'][m][1] for m in metrics]
+    # Plot 1: Similarity Impact
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
     
-    x = np.arange(len(labels))
+    metrics = ['cosine', 'msd', 'pearson']
+    x = np.arange(len(metrics))
     width = 0.35
     
-    fig, ax = plt.subplots()
-    rects1 = ax.bar(x - width/2, user_rmses, width, label='User CF')
-    rects2 = ax.bar(x + width/2, item_rmses, width, label='Item CF')
+    user_rmses = [sim_results['User-CF'][m]['rmse'] for m in metrics]
+    item_rmses = [sim_results['Item-CF'][m]['rmse'] for m in metrics]
     
-    ax.set_ylabel('RMSE')
-    ax.set_title('Impact of Similarity Metrics')
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels)
-    ax.legend()
-    plt.savefig('similarity_impact.png')
+    ax1.bar(x - width/2, user_rmses, width, label='User-CF', color='#3498db', alpha=0.8)
+    ax1.bar(x + width/2, item_rmses, width, label='Item-CF', color='#e74c3c', alpha=0.8)
+    ax1.set_xlabel('Similarity Metric')
+    ax1.set_ylabel('RMSE')
+    ax1.set_title('Impact of Similarity Metrics on RMSE')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(['Cosine', 'MSD', 'Pearson'])
+    ax1.legend()
+    ax1.grid(True, alpha=0.3, axis='y')
     
-    # Plot K Impact
-    plt.figure()
-    plt.plot(k_values, k_results['user'], label='User CF')
-    plt.plot(k_values, k_results['item'], label='Item CF')
-    plt.xlabel('Number of Neighbors (K)')
-    plt.ylabel('RMSE')
-    plt.title('Impact of Neighbors (K)')
-    plt.legend()
-    plt.savefig('k_impact.png')
+    user_maes = [sim_results['User-CF'][m]['mae'] for m in metrics]
+    item_maes = [sim_results['Item-CF'][m]['mae'] for m in metrics]
+    
+    ax2.bar(x - width/2, user_maes, width, label='User-CF', color='#3498db', alpha=0.8)
+    ax2.bar(x + width/2, item_maes, width, label='Item-CF', color='#e74c3c', alpha=0.8)
+    ax2.set_xlabel('Similarity Metric')
+    ax2.set_ylabel('MAE')
+    ax2.set_title('Impact of Similarity Metrics on MAE')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(['Cosine', 'MSD', 'Pearson'])
+    ax2.legend()
+    ax2.grid(True, alpha=0.3, axis='y')
+    
+    plt.tight_layout()
+    plt.savefig('similarity_impact.png', dpi=150, bbox_inches='tight')
+    print("  Saved: similarity_impact.png")
+    plt.close()
+    
+    # Plot 2: K Impact
+    plt.figure(figsize=(10, 6))
+    plt.plot(k_values, k_results['User-CF'], 'o-', label='User-CF', linewidth=2, markersize=6, color='#3498db')
+    plt.plot(k_values, k_results['Item-CF'], 's-', label='Item-CF', linewidth=2, markersize=6, color='#e74c3c')
+    plt.xlabel('Number of Neighbors (K)', fontsize=12)
+    plt.ylabel('RMSE', fontsize=12)
+    plt.title('Impact of Number of Neighbors on RMSE', fontsize=14)
+    plt.legend(fontsize=11)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('k_impact.png', dpi=150, bbox_inches='tight')
+    print("  Saved: k_impact.png")
+    plt.close()
+
+def save_results(results, fold_details, sim_results, sim_fold_details, 
+                k_values, k_results, best_k_user, best_k_item):
+    """
+    Save all results to task2_results.txt for report generation
+    """
+    with open('task2_results.txt', 'w') as f:
+        f.write("="*70 + "\n")
+        f.write("TASK 2 RESULTS - RECOMMENDER SYSTEMS (Surprise Library)\n")
+        f.write("="*70 + "\n\n")
+        
+        # Q(c) Results
+        f.write("Q(c): 5-Fold Cross-Validation Average Results\n")
+        f.write("-"*70 + "\n")
+        for name, res in results.items():
+            f.write(f"{name}:\n")
+            f.write(f"  MAE:  {res['mae']:.4f} (±{res['mae_std']:.4f})\n")
+            f.write(f"  RMSE: {res['rmse']:.4f} (±{res['rmse_std']:.4f})\n\n")
+        
+        # Q(c) Individual Fold Details
+        f.write("\nQ(c): Individual Fold Details\n")
+        f.write("-"*70 + "\n")
+        for name in ['PMF', 'User-CF', 'Item-CF']:
+            f.write(f"\n{name} - Individual Folds:\n")
+            folds = fold_details[name]
+            for i in range(5):
+                f.write(f"  Fold {i+1}: MAE={folds['fold_maes'][i]:.4f}, "
+                       f"RMSE={folds['fold_rmses'][i]:.4f}, "
+                       f"Fit={folds['fold_fit_times'][i]:.2f}s, "
+                       f"Test={folds['fold_test_times'][i]:.2f}s\n")
+        
+        # Q(d) Best Model
+        f.write("\n" + "="*70 + "\n")
+        f.write("Q(d): Best Model Comparison\n")
+        f.write("-"*70 + "\n")
+        best_model = min(results.keys(), key=lambda x: results[x]['rmse'])
+        f.write(f"Best Model (by RMSE): {best_model}\n")
+        f.write(f"  MAE:  {results[best_model]['mae']:.4f}\n")
+        f.write(f"  RMSE: {results[best_model]['rmse']:.4f}\n\n")
+        
+        # Q(e) Similarity Results
+        f.write("="*70 + "\n")
+        f.write("Q(e): Similarity Metrics Impact\n")
+        f.write("-"*70 + "\n")
+        for method in ['User-CF', 'Item-CF']:
+            f.write(f"\n{method}:\n")
+            for sim in ['cosine', 'msd', 'pearson']:
+                f.write(f"  {sim.upper():8s}: MAE={sim_results[method][sim]['mae']:.4f}, "
+                       f"RMSE={sim_results[method][sim]['rmse']:.4f}\n")
+        
+        # Q(e) Individual Fold Details for Similarity Metrics
+        f.write("\n\nQ(e): Similarity Metrics - Individual Fold Details\n")
+        f.write("-"*70 + "\n")
+        for method in ['User-CF', 'Item-CF']:
+            for sim in ['cosine', 'msd', 'pearson']:
+                f.write(f"\n{method} - {sim.upper()}:\n")
+                folds = sim_fold_details[method][sim]
+                for i in range(5):
+                    f.write(f"  Fold {i+1}: MAE={folds['fold_maes'][i]:.4f}, "
+                           f"RMSE={folds['fold_rmses'][i]:.4f}\n")
+        
+        # Q(f) K Impact
+        f.write("\n" + "="*70 + "\n")
+        f.write("Q(f): Impact of Number of Neighbors (K)\n")
+        f.write("-"*70 + "\n")
+        f.write("K Values: " + str(k_values) + "\n\n")
+        f.write("User-CF RMSE: " + str([f"{x:.4f}" for x in k_results['User-CF']]) + "\n")
+        f.write("Item-CF RMSE: " + str([f"{x:.4f}" for x in k_results['Item-CF']]) + "\n\n")
+        
+        # Q(g) Best K
+        f.write("="*70 + "\n")
+        f.write("Q(g): Best K Values\n")
+        f.write("-"*70 + "\n")
+        f.write(f"Best K for User-CF: {best_k_user} (RMSE={min(k_results['User-CF']):.4f})\n")
+        f.write(f"Best K for Item-CF: {best_k_item} (RMSE={min(k_results['Item-CF']):.4f})\n")
+    
+    print("\nResults saved to: task2_results.txt")
+
+def main():
+    """
+    Main execution function
+    """
+    print("="*70)
+    print("TASK 2: RECOMMENDER SYSTEMS")
+    print("Implementation: Surprise Library (scikit-surprise)")
+    print("="*70)
+    
+    # Load data
+    data, df = load_and_prepare_data()
+    
+    # Q(c): Evaluate algorithms
+    results, fold_details = evaluate_algorithms(data)
+    
+    # Q(e): Test similarity metrics
+    sim_results, sim_fold_details = test_similarity_metrics(data)
+    
+    # Q(f) & Q(g): Test K values
+    k_values, k_results, best_k_user, best_k_item = test_neighbor_impact(data)
+    
+    # Create visualizations
+    create_visualizations(sim_results, k_values, k_results)
+    
+    # Save all results
+    save_results(results, fold_details, sim_results, sim_fold_details,
+                k_values, k_results, best_k_user, best_k_item)
+    
+    print("\n" + "="*70)
+    print("TASK 2 COMPLETED SUCCESSFULLY!")
+    print("="*70)
+    print("\nGenerated files:")
+    print("  - task2_results.txt")
+    print("  - similarity_impact.png")
+    print("  - k_impact.png")
 
 if __name__ == "__main__":
     main()
