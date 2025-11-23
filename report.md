@@ -249,8 +249,6 @@ We performed granular testing of K values from 5 to 60 in steps of 5 to thorough
 
 ## Code Access
 
-The complete source code for this project is available on GitHub:
+The complete source code for this project (including `task1_kmeans.py` and `task2_recommender.py`) is available at:
 
-- **Task 1 (K-Means Clustering)**: [task1_kmeans.py](https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task1_kmeans.py)
-- **Task 2 (Recommender Systems)**: [task2_recommender.py](https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task2_recommender.py)
-- **Full Repository**: [https://github.com/taljindergill78/clustering-recommender-systems](https://github.com/taljindergill78/clustering-recommender-systems)
+**[Google Drive Folder](https://drive.google.com/drive/folders/1VDNlSjESbSl9d2erQtBtcKW55q9yb5UE)**

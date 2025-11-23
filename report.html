@@ -212,12 +212,8 @@
 <p><b>Item-Based CF</b>: Optimal K=55 (RMSE=0.9245) within tested range, with slight degradation at K=60 (RMSE=0.9266). The sustained improvement from K=5→55 (6.8% gain) indicates that item-item relationships are sparser and benefit from broader neighborhoods to overcome data sparsity, but adding too many neighbors (K=60) introduces noise from less-similar items.</p>
 <p><b>Practical Implication</b>: The distinct optimal K values (60 vs 55) demonstrate that hyperparameter tuning must be method-specific, though both methods converge to similar ranges (50-60). User-CF benefits from slightly larger neighborhoods due to richer user-user similarity signals, while Item-CF requires careful balancing to avoid dilution from dissimilar items. The similar optimal ranges (±5) suggest the KNNWithMeans algorithm handles both cases robustly, with computational cost being the primary differentiator (User-CF: faster fit, slower prediction; Item-CF: slower fit, faster prediction for large item catalogs).</p>
 <h2>Code Access</h2>
-<p>The complete source code for this project is available on GitHub:</p>
-<ul>
-<li><b>Task 1 (K-Means Clustering)</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task1_kmeans.py">task1_kmeans.py</a></li>
-<li><b>Task 2 (Recommender Systems)</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems/blob/main/task2_recommender.py">task2_recommender.py</a></li>
-<li><b>Full Repository</b>: <a href="https://github.com/taljindergill78/clustering-recommender-systems">https://github.com/taljindergill78/clustering-recommender-systems</a></li>
-</ul>
+<p>The complete source code for this project (including <code>task1_kmeans.py</code> and <code>task2_recommender.py</code>) is available at:</p>
+<p><b><a href="https://drive.google.com/drive/folders/1VDNlSjESbSl9d2erQtBtcKW55q9yb5UE">Google Drive Folder</a></b></p>
 
 </body>
 </html>
